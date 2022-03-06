@@ -1,0 +1,23 @@
+apiVersion: v2.0
+spec:
+  ports:
+    name: "restServer"
+    bind_addr: ""
+  dbpg: 
+    name: ""
+    host: ""
+    port: 0
+    user: ""
+    password: ""
+    database: ""
+    max_conn_lifetime: 0
+    max_conn_idletime: 0
+    max_conns: 0
+    min_conns: 0
+    health_check_period: 0
+  dbms: 
+    name: "mssql"
+    url: ""
+  jwt:
+    token: ""
+    term:
