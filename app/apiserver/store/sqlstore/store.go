@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/webdevolegkuprianov/server_http_rest_ar/app/apiserver/store"
+	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/store"
 )
 
 //Stores

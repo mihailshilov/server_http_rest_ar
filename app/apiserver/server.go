@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/webdevolegkuprianov/server_http_rest_ar/app/apiserver/model"
-	"github.com/webdevolegkuprianov/server_http_rest_ar/app/apiserver/store"
+	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
+	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/store"
 
 	"github.com/go-playground/validator"
 
-	logger "github.com/webdevolegkuprianov/server_http_rest_ar/app/apiserver/logger"
+	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
 
 //errors

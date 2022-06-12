@@ -1,4 +1,4 @@
-module github.com/webdevolegkuprianov/server_http_rest_ar
+module github.com/mihailshilov/server_http_rest_ar
 
 go 1.17
 

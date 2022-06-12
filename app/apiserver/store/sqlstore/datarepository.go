@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
-	"github.com/webdevolegkuprianov/server_http_rest_ar/app/apiserver/model"
+	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
 
-	logger "github.com/webdevolegkuprianov/server_http_rest_ar/app/apiserver/logger"
+	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
 
 //Data repository
