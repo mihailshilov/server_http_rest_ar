@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	// _ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
