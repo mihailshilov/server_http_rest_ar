@@ -30,13 +30,13 @@ func Start(config *model.Service) error {
 
 	defer dbPostgres.Close()
 
-	dbMssql, err := newDbMssql(config.Spec.DBms.Url)
-	if err != nil {
-		logger.ErrorLogger.Println(err)
-		return err
-	}
+	// dbMssql, err := newDbMssql(config.Spec.DBms.Url)
+	// if err != nil {
+	// 	logger.ErrorLogger.Println(err)
+	// 	return err
+	// }
 
-	defer dbMssql.Close()
+	// defer dbMssql.Close()
 
 	store_db := sqlstore.New(dbPostgres, dbMssql)
 
