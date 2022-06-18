@@ -9,11 +9,12 @@ import (
 	"path/filepath"
 	"time"
 
-	_ "github.com/denisenkom/go-mssqldb"
+	// _ "github.com/denisenkom/go-mssqldb"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
+	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/store/sqlstore"
 
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
@@ -37,6 +38,7 @@ func Start(config *model.Service) error {
 	// defer dbMssql.Close()
 
 	// store_db := sqlstore.New(dbPostgres, dbMssql)
+	store_db := sqlstore.New(dbPostgres)
 
 	//cert, key files
 	fcert, err := filepath.Abs("/root/cert/carsrv.shilov.pro.crt")
@@ -78,7 +80,7 @@ func Start(config *model.Service) error {
 		},
 	}
 
-	//server := newServer(store_db, config, clt)
+	server := newServer(store_db, config, clt)
 
 	//setup HTTPS server
 	srv := &http.Server{
