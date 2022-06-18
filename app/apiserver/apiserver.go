@@ -78,7 +78,7 @@ func Start(config *model.Service) error {
 		},
 	}
 
-	server := newServer(store_db, config, clt)
+	//server := newServer(store_db, config, clt)
 
 	//setup HTTPS server
 	srv := &http.Server{
