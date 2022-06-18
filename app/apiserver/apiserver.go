@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"database/sql"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
@@ -15,7 +14,6 @@ import (
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
-	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/store/sqlstore"
 
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
@@ -38,7 +36,7 @@ func Start(config *model.Service) error {
 
 	// defer dbMssql.Close()
 
-	store_db := sqlstore.New(dbPostgres, dbMssql)
+	// store_db := sqlstore.New(dbPostgres, dbMssql)
 
 	//cert, key files
 	fcert, err := filepath.Abs("/root/cert/carsrv.shilov.pro.crt")
@@ -129,20 +127,20 @@ func newDbPostgres(conf *model.Service) (*pgxpool.Pool, error) {
 }
 
 //connect to mssql
-func newDbMssql(databaseUrl string) (*sql.DB, error) {
+// func newDbMssql(databaseUrl string) (*sql.DB, error) {
 
-	db, err := sql.Open("sqlserver", databaseUrl)
-	if err != nil {
-		logger.ErrorLogger.Println(err)
-		return nil, err
+// 	db, err := sql.Open("sqlserver", databaseUrl)
+// 	if err != nil {
+// 		logger.ErrorLogger.Println(err)
+// 		return nil, err
 
-	}
+// 	}
 
-	if err := db.Ping(); err != nil {
-		logger.ErrorLogger.Println(err)
-		return nil, err
-	}
+// 	if err := db.Ping(); err != nil {
+// 		logger.ErrorLogger.Println(err)
+// 		return nil, err
+// 	}
 
-	return db, nil
+// 	return db, nil
 
-}
+// }
