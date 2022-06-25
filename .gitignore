@@ -1,3 +1,4 @@
 logs.txt
 *.exe
 go.work
+apiserver

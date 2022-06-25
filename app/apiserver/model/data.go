@@ -9,7 +9,7 @@ type DataRequest struct {
 	ИдЗаявки          string `json:"id_request" validate:"required"` //*
 	VINбазовый        string `json:"vin0" validate:"required"`       //*
 	VINпослеДоработки string `json:"vin1,omitempty"`
-	ВремяЗаявки       string `json:"date_time_req" validate:"required,yyyy-mm-ddThh:mm:ss"` //*
+	ВремяЗаявки       string `json:"date_time_req" validate:"required,yyyy-mm-dd hh:mm:ss"` //*
 }
 
 //статусы
