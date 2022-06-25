@@ -169,7 +169,7 @@ func (s *server) handleRequests() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-
+		logger.InfoLogger.Println("good request )")
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
