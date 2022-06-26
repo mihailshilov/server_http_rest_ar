@@ -175,12 +175,13 @@ func (s *server) handleRequests() http.HandlerFunc {
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
-		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 		if err := s.store.Data().QueryInsertRequests(req); err != nil {
 			logger.ErrorLogger.Println(err)
+			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
+		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
 
