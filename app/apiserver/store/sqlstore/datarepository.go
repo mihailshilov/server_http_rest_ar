@@ -158,7 +158,7 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 //requests
 func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 
-	query := `insert into requests values($1, $2, $3, $4)`
+	query := `insert into requests values($1, $2, $3, $4, $5, $6)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -171,9 +171,11 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 
 	_, err = tx.Exec(ctx, query,
 		data.DataRequest.ИдЗаявки,
-		data.DataRequest.VINбазовый,
-		data.DataRequest.VINпослеДоработки,
-		data.DataRequest.ВремяЗаявки,
+		data.DataRequest.ДатаВремяЗаявки,
+		data.DataRequest.ДатаВремяИнформирования,
+		data.DataRequest.Ответственный,
+		data.DataRequest.ИдОрганизации,
+		data.DataRequest.ИдПодразделения,
 	)
 	if err != nil {
 		logger.ErrorLogger.Println(err)

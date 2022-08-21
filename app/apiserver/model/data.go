@@ -6,10 +6,12 @@ type Requests struct {
 }
 
 type DataRequest struct {
-	ИдЗаявки          string `json:"id_request" validate:"required"` //*
-	VINбазовый        string `json:"vin0" validate:"required"`       //*
-	VINпослеДоработки string `json:"vin1,omitempty"`
-	ВремяЗаявки       string `json:"date_time_req" validate:"required"` //*
+	ИдЗаявки                string `json:"id_request" validate:"required"`                        //*
+	ДатаВремяЗаявки         string `json:"date_time_req" validate:"required,yyyy-mm-ddThh:mm:ss"` //*
+	ДатаВремяИнформирования string `json:"date_time_inf" validate:"required,yyyy-mm-ddThh:mm:ss"` //*
+	Ответственный           string `json:"responsible"`
+	ИдОрганизации           string `json:"id_org" validate:"required"`
+	ИдПодразделения         string `json:"id_dep" validate:"required"`
 }
 
 //статусы
