@@ -6,9 +6,9 @@ type Requests struct {
 }
 
 type DataRequest struct {
-	ИдЗаявки                string `json:"id_request" validate:"required"`             //*
-	ДатаВремяЗаявки         string `json:"date_time_req" validate:"required,datetime"` //*
-	ДатаВремяИнформирования string `json:"date_time_inf" validate:"required,datetime"` //*
+	ИдЗаявки                string `json:"id_request" validate:"required"`    //*
+	ДатаВремяЗаявки         string `json:"date_time_req" validate:"required"` //*
+	ДатаВремяИнформирования string `json:"date_time_inf" validate:"required"` //*
 	Ответственный           string `json:"responsible" validate:"required"`
 	ИдОрганизации           string `json:"id_org" validate:"required"`
 	ИдПодразделения         string `json:"id_dep" validate:"required"`
