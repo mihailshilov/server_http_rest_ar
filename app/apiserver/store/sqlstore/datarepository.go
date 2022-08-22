@@ -158,7 +158,7 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 //requests
 func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 
-	query := `insert into requests values($1, $2, $3, $4, $5, $6)`
+	query := `insert into srv_requests values($1, $2, $3, $4, $5, $6)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
