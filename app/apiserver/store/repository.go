@@ -23,6 +23,7 @@ type UserRepository interface {
 //data repository
 type DataRepository interface {
 	QueryInsertOrders(model.Orders) error
+	QueryInsertConsOrders(model.ConsOrders) error
 	QueryInsertRequests(model.Requests) error
 	QueryInsertStatuses(model.Statuses) error
 }

@@ -95,6 +95,7 @@ func (s *server) configureRouter() {
 	auth.Use(s.middleWare)
 	//booking, forms submit
 	auth.HandleFunc("/servicerequests", s.handleRequests()).Methods("POST")
+	auth.HandleFunc("/serviceconsorders", s.handleConsOrders()).Methods("POST")
 	auth.HandleFunc("/serviceorders", s.handleOrders()).Methods("POST")
 	auth.HandleFunc("/servicestatuses", s.handleStatuses()).Methods("POST")
 
@@ -187,6 +188,36 @@ func (s *server) handleRequests() http.HandlerFunc {
 
 }
 
+//handle service consolidated orders
+func (s *server) handleConsOrders() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		req := model.ConsOrders{}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			logger.ErrorLogger.Println(err)
+			return
+		}
+		logger.InfoLogger.Println("good request )")
+		if err := s.validate.Struct(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := s.store.Data().QueryInsertConsOrders(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+
+	}
+
+}
+
 //handle service orders
 func (s *server) handleOrders() http.HandlerFunc {
 
@@ -205,15 +236,13 @@ func (s *server) handleOrders() http.HandlerFunc {
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
-			return
 		}
-		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 		if err := s.store.Data().QueryInsertOrders(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-
+		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 	}
 
 }
