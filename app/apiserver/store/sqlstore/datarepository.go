@@ -2,10 +2,11 @@ package sqlstore
 
 import (
 	"context"
+	"reflect"
 	_ "reflect"
 	"time"
 
-	_ "github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
 
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
@@ -137,10 +138,66 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 
 }
 
-//statuses
+//statuses old
+// func (r *DataRepository) QueryInsertStatuses_old(data model.Statuses) error {
+
+// 	//query := `insert into statuses values($1, $2, $3, $4, $5)`
+
+// 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+// 	defer cancelFunc()
+
+// 	tx, err := r.store.dbPostgres.Begin(context.Background())
+// 	if err != nil {
+// 		logger.ErrorLogger.Println(err)
+// 		return err
+// 	}
+
+// 	_, err = tx.Exec(ctx, query,
+// 		data.DataStatus.ИдЗаказНаряд,
+// 		data.DataStatus.ИдОрганизации,
+// 		data.DataStatus.ИдПодразделения,
+// 		data.DataStatus.Статус,
+// 		data.DataStatus.ДатаВремя,
+// 	)
+// 	if err != nil {
+// 		logger.ErrorLogger.Println(err)
+// 		return err
+// 	}
+
+// 	err = tx.Commit(ctx)
+// 	if err != nil {
+// 		logger.ErrorLogger.Println(err)
+// 		return err
+// 	}
+
+// 	return nil
+
+// }
+
 func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 
-	query := `insert into statuses values($1, $2, $3, $4, $5)`
+	var statuses [][]interface{}
+
+	statusesValSlice := reflect.ValueOf(data.DataStatus).FieldByName("OrderStatuses").Interface().(model.OrderStatuses)
+
+	//fmt.Println(reflect.ValueOf(data))
+
+	for _, k := range statusesValSlice {
+
+		var iter []interface{}
+
+		iter = append(
+			iter,
+			data.DataStatus.ИдЗаказНаряда,
+			data.DataStatus.ИдОрганизации,
+			data.DataStatus.ИдПодразделения,
+			k.Статус,
+			k.ДатаВремя,
+		)
+
+		statuses = append(statuses, iter)
+
+	}
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -151,13 +208,148 @@ func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, query,
-		data.DataStatus.ИдЗаказНаряд,
-		data.DataStatus.VINбазовый,
-		data.DataStatus.VINпослеДоработки,
-		data.DataStatus.ТекущийСтатусЗаказНаряда,
-		data.DataStatus.ВремяПрисвоенияСтатуса,
-	)
+	//Statuses
+	tableStatuses := []string{
+		"ИдЗаказНаряда",
+		"ИдОрганизации",
+		"ИдПодразделения",
+		"Статус",
+		"ДатаВремя",
+	}
+
+	_, err = tx.CopyFrom(ctx, pgx.Identifier{"statuses"}, tableStatuses, pgx.CopyFromRows(statuses))
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	return nil
+
+}
+
+func (r *DataRepository) QueryInsertParts(data model.Parts) error {
+
+	var parts [][]interface{}
+
+	partsValSlice := reflect.ValueOf(data.DataPart).FieldByName("OrderParts").Interface().(model.OrderParts)
+
+	//fmt.Println(reflect.ValueOf(data))
+
+	for _, k := range partsValSlice {
+
+		var iter []interface{}
+
+		iter = append(
+			iter,
+			data.DataPart.ИдЗаказНаряда,
+			data.DataPart.ИдОрганизации,
+			data.DataPart.ИдПодразделения,
+			k.Наименование,
+			k.КаталожныйНомер,
+			k.ЧертежныйНомер,
+			k.Количество,
+			k.ЕдИзм,
+			k.Стоимость,
+			k.НДС,
+		)
+
+		parts = append(parts, iter)
+
+	}
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	//Parts
+	tableParts := []string{
+		"ИдЗаказНаряда",
+		"ИдОрганизации",
+		"ИдПодразделения",
+		"Наименование",
+		"КаталожныйНомер",
+		"ЧертежныйНомер",
+		"Количество",
+		"ЕдИзм",
+		"Стоимость",
+		"НДС",
+	}
+
+	_, err = tx.CopyFrom(ctx, pgx.Identifier{"parts"}, tableParts, pgx.CopyFromRows(parts))
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	return nil
+
+}
+
+func (r *DataRepository) QueryInsertWorks(data model.Works) error {
+
+	var works [][]interface{}
+
+	worksValSlice := reflect.ValueOf(data.DataWork).FieldByName("OrderWorks").Interface().(model.OrderWorks)
+
+	//fmt.Println(reflect.ValueOf(data))
+
+	for _, k := range worksValSlice {
+
+		var iter []interface{}
+
+		iter = append(
+			iter,
+			data.DataWork.ИдЗаказНаряда,
+			data.DataWork.ИдОрганизации,
+			data.DataWork.ИдПодразделения,
+			k.Наименование,
+			k.КодОперации,
+			k.НормативнаяТрудоёмкость,
+			k.СтоимостьНЧ,
+		)
+
+		works = append(works, iter)
+
+	}
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	//Works
+	tableWorks := []string{
+		"ИдЗаказНаряда",
+		"ИдОрганизации",
+		"ИдПодразделения",
+		"Наименование",
+		"КодОперации",
+		"НормативнаяТрудоёмкость",
+		"СтоимостьНЧ",
+	}
+
+	_, err = tx.CopyFrom(ctx, pgx.Identifier{"works"}, tableWorks, pgx.CopyFromRows(works))
 	if err != nil {
 		logger.ErrorLogger.Println(err)
 		return err
@@ -219,7 +411,6 @@ func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 
 // 	//works
 // 	var works [][]interface{}
-
 // 	for _, k := range ordersValSlice {
 // 		for _, l := range k.Works {
 // 			var iter []interface{}

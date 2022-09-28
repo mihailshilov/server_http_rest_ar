@@ -3,6 +3,7 @@ package apiserver
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"time"
@@ -98,6 +99,8 @@ func (s *server) configureRouter() {
 	auth.HandleFunc("/serviceconsorders", s.handleConsOrders()).Methods("POST")
 	auth.HandleFunc("/serviceorders", s.handleOrders()).Methods("POST")
 	auth.HandleFunc("/servicestatuses", s.handleStatuses()).Methods("POST")
+	auth.HandleFunc("/serviceparts", s.handleParts()).Methods("POST")
+	auth.HandleFunc("/serviceworks", s.handleWorks()).Methods("POST")
 
 }
 
@@ -170,6 +173,9 @@ func (s *server) handleRequests() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
+
+		//fmt.Println(req) //debug
+
 		logger.InfoLogger.Println("good request )")
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
@@ -231,6 +237,8 @@ func (s *server) handleOrders() http.HandlerFunc {
 			return
 		}
 
+		fmt.Println(r) //debug
+
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
 
 		if err := s.validate.Struct(req); err != nil {
@@ -259,12 +267,85 @@ func (s *server) handleStatuses() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-
+		fmt.Println(req) //debug
+		
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
+
+		if err := s.store.Data().QueryInsertStatuses(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			return
+		}
+		logger.InfoLogger.Println("good request )")
+		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+
+	}
+
+}
+
+//handle service parts
+func (s *server) handleParts() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		req := model.Parts{}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			logger.ErrorLogger.Println(err)
+			return
+		}
+		
+		
+		if err := s.validate.Struct(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		fmt.Println('-') //debug
+		fmt.Println(req) //debug
+		fmt.Println('-') //debug
+
+		if err := s.store.Data().QueryInsertParts(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			return
+		}
+		logger.InfoLogger.Println("good request )")
+		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+
+	}
+
+}
+
+//handle service works
+func (s *server) handleWorks() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		req := model.Works{}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			logger.ErrorLogger.Println(err)
+			return
+		}
+		//fmt.Println(req) //debug
+		
+		if err := s.validate.Struct(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := s.store.Data().QueryInsertWorks(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			return
+		}
+		logger.InfoLogger.Println("good request )")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}

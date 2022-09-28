@@ -26,4 +26,6 @@ type DataRepository interface {
 	QueryInsertConsOrders(model.ConsOrders) error
 	QueryInsertRequests(model.Requests) error
 	QueryInsertStatuses(model.Statuses) error
+	QueryInsertParts(model.Parts) error
+	QueryInsertWorks(model.Works) error
 }
