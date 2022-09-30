@@ -8,7 +8,7 @@ type Requests struct {
 type DataRequest struct {
 	ИдЗаявки                string `json:"id_request" validate:"required"`    //*
 	ДатаВремяЗаявки         string `json:"date_time_req" validate:"required"` //*
-	ДатаВремяИнформирования string `json:"date_time_inf" validate:"required"` //*
+	ДатаВремяИнформирования string `json:"date_time_inf,omitempty"` //*
 	Ответственный           string `json:"responsible" validate:"required"`
 	ИдОрганизации           string `json:"id_org" validate:"required"`
 	ИдПодразделения         string `json:"id_dep" validate:"required"`
@@ -21,8 +21,8 @@ type Orders struct {
 
 type DataOrder struct {
 	ИдЗаказНаряда           string `json:"id_order" validate:"required"`
-	ИдЗаявки                string `json:"id_request" validate:"required"`
-	ИдСводногоЗаказНаряда   string `json:"id_cons_order" validate:"required"`
+	ИдЗаявки                string `json:"id_request,omitempty"`
+	ИдСводногоЗаказНаряда   string `json:"id_cons_order,omitempty"`
 	ДатаВремяСоздания       string `json:"date_time_create" validate:"required"`
 	ДатаВремяОткрытия       string `json:"date_time_open" validate:"required"`
 	ВидОбращения            string `json:"order_type" validate:"required"`
@@ -30,7 +30,7 @@ type DataOrder struct {
 	ПричинаОбращения        string `json:"reason" validate:"required"` //reason
 	VINбазовый              string `json:"vin0" validate:"required"`   //*
 	VINпослеДоработки       string `json:"vin1,omitempty"`
-	ДатаВремяИнформирования string `json:"date_time_form" validate:"required"`
+	ДатаВремяИнформирования string `json:"date_time_form,omitempty"`
 	Ответственный           string `json:"responsible" validate:"required"`
 	ИдОрганизации           string `json:"id_org" validate:"required"`
 	ИдПодразделения         string `json:"id_dep" validate:"required"`
@@ -45,7 +45,7 @@ type ConsOrders struct {
 
 type DataConsOrder struct {
 	ИдСводногоЗаказНаряда string `json:"id_cons_order" validate:"required"`    //*
-	ИдЗаявки              string `json:"id_request" validate:"required"`       //*
+	ИдЗаявки              string `json:"id_request,omitempty"`       //*
 	ДатаВремяСоздания     string `json:"date_time_create" validate:"required"` //*
 	Ответственный         string `json:"responsible" validate:"required"`
 	ИдОрганизации         string `json:"id_org" validate:"required"`
@@ -105,7 +105,7 @@ type DataWork struct {
 
 type OrderWorks []struct {
 	Наименование			   	string `json:"name"`
-	КодОперации    				string `json:"code"`
+	КодОперации    				string `json:"code"`  /// не об
 	НормативнаяТрудоёмкость    	string `json:"complexity"`
 	СтоимостьНЧ    				string `json:"price_hour"`
 }
