@@ -268,6 +268,8 @@ func (s *server) handleStatuses() http.HandlerFunc {
 			return
 		}
 		fmt.Println(req) //debug
+
+		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
 		
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
@@ -298,6 +300,10 @@ func (s *server) handleParts() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
+
+		fmt.Println('-') //debug
+		fmt.Println(req) //debug
+		fmt.Println('-') //debug
 		
 		
 		if err := s.validate.Struct(req); err != nil {
@@ -306,9 +312,7 @@ func (s *server) handleParts() http.HandlerFunc {
 			return
 		}
 
-		fmt.Println('-') //debug
-		fmt.Println(req) //debug
-		fmt.Println('-') //debug
+		
 
 		if err := s.store.Data().QueryInsertParts(req); err != nil {
 			logger.ErrorLogger.Println(err)

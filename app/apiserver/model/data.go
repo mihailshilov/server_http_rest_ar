@@ -71,7 +71,7 @@ type OrderStatuses []struct {
 
 //запчасти
 type Parts struct {
-	DataPart DataStatus `json:"order_parts"`
+	DataPart DataPart `json:"order_parts"`
 }
 
 type DataPart struct {
@@ -93,14 +93,14 @@ type OrderParts []struct {
 
 //работы
 type Works struct {
-	DataWork DataStatus `json:"order_works"`
+	DataWork DataWork `json:"order_works"`
 }
 
 type DataWork struct {
 	ИдЗаказНаряда   string `json:"id_order"` //*
 	ИдОрганизации   string `json:"id_org"`
 	ИдПодразделения string `json:"id_dep"`
-	OrderWorks  `json:"works"`
+	OrderWorks  	`json:"works"`
 }
 
 type OrderWorks []struct {

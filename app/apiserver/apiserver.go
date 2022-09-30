@@ -41,12 +41,12 @@ func Start(config *model.Service) error {
 	store_db := sqlstore.New(dbPostgres)
 
 	//cert, key files
-	fcert, err := filepath.Abs("/root/cert/carsrv.shilov.pro.crt")
+	fcert, err := filepath.Abs("/root/cert/carsrv.st.tech.crt")
 	if err != nil {
 		logger.ErrorLogger.Println(err)
 		return err
 	}
-	fkey, err := filepath.Abs("/root/cert/carsrv.shilov.pro.key")
+	fkey, err := filepath.Abs("/root/cert/carsrv.st.tech.key")
 	if err != nil {
 		logger.ErrorLogger.Println(err)
 		return err
