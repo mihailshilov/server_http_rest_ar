@@ -7,6 +7,17 @@ import (
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
 
+// @title Service App API
+// @version 1.0
+// @API для сбора данных сервисных станций
+
+// @host localhost:443
+// @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+
 func main() {
 
 	config, err := model.NewConfig()

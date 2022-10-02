@@ -14,6 +14,8 @@ type Service struct {
 		Ports struct {
 			Name string `yaml:"name"`
 			Addr string `yaml:"bind_addr"`
+			Crt string `yaml:"crt"`
+			Key string `yaml:"key"`
 		} `yaml:"ports"`
 		DBpg struct {
 			Name              string `yaml:"name"`

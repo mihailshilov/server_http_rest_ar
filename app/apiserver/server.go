@@ -9,6 +9,10 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
+	httpSwagger "github.com/swaggo/http-swagger"
+	_ "github.com/swaggo/http-swagger/example/gorilla/docs"
+
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/store"
 
@@ -90,7 +94,17 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) configureRouter() {
 	//open
+
+	//s.router.HandleFunc("/swagger", s.handleSwagger()).Methods("GET")
+	s.router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"), //The url pointing to API definition
+		httpSwagger.DeepLinking(true),
+		httpSwagger.DocExpansion("none"),
+		httpSwagger.DomID("swagger-ui"),
+	)).Methods(http.MethodGet)
+
 	s.router.HandleFunc("/authentication", s.handleAuth()).Methods("POST")
+
 	//private
 	auth := s.router.PathPrefix("/auth").Subrouter()
 	auth.Use(s.middleWare)
@@ -270,7 +284,7 @@ func (s *server) handleStatuses() http.HandlerFunc {
 		fmt.Println(req) //debug
 
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
-		
+
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
@@ -304,15 +318,12 @@ func (s *server) handleParts() http.HandlerFunc {
 		fmt.Println('-') //debug
 		fmt.Println(req) //debug
 		fmt.Println('-') //debug
-		
-		
+
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
-
-		
 
 		if err := s.store.Data().QueryInsertParts(req); err != nil {
 			logger.ErrorLogger.Println(err)
@@ -338,7 +349,7 @@ func (s *server) handleWorks() http.HandlerFunc {
 			return
 		}
 		//fmt.Println(req) //debug
-		
+
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
