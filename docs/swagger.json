@@ -1,11 +1,12 @@
 {
     "swagger": "2.0",
     "info": {
-        "title": "Service App API",
+        "description": "API Server for TodoList Application",
+        "title": "Repair App API",
         "contact": {},
-        "version": "1.0"
+        "version": "9.0"
     },
-    "host": "localhost:443",
+    "host": "carsrv.shilov.pro",
     "basePath": "/",
     "paths": {},
     "securityDefinitions": {

@@ -27,12 +27,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
-	Host:             "localhost:443",
+	Version:          "9.0",
+	Host:             "carsrv.shilov.pro",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Service App API",
-	Description:      "",
+	Title:            "Repair App API",
+	Description:      "API Server for TodoList Application",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

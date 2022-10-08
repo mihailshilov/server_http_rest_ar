@@ -10,8 +10,8 @@ import (
 
 	"github.com/gorilla/mux"
 
+	_ "github.com/mihailshilov/server_http_rest_ar/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
-	_ "github.com/swaggo/http-swagger/example/gorilla/docs"
 
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/store"
@@ -22,6 +22,7 @@ import (
 )
 
 //errors
+
 var (
 	errIncorrectEmailOrPassword = errors.New("incorrect auth")
 	errReg                      = errors.New("service registration error")
@@ -97,7 +98,7 @@ func (s *server) configureRouter() {
 
 	//s.router.HandleFunc("/swagger", s.handleSwagger()).Methods("GET")
 	s.router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
-		httpSwagger.URL("/swagger/doc.json"), //The url pointing to API definition
+		httpSwagger.URL("https://carsrv.shilov.pro/swagger/doc.json"), //The url pointing to API definition
 		httpSwagger.DeepLinking(true),
 		httpSwagger.DocExpansion("none"),
 		httpSwagger.DomID("swagger-ui"),
@@ -174,6 +175,20 @@ func (s *server) middleWare(next http.Handler) http.Handler {
 	})
 
 }
+
+// @Summary Создать заявку
+// @Security ApiKeyAuth
+// @Tags requests
+// @Description Создать заявку
+// @ID create-request
+// @Accept  json
+// @Produce  json
+// @Param input body todo.TodoList true "list info"
+// @Success 200 {integer} integer 1
+// @Failure 400,404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /api/lists [post]
 
 //handle service requests
 func (s *server) handleRequests() http.HandlerFunc {

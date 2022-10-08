@@ -7,16 +7,16 @@ import (
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
 
-// @title Service App API
-// @version 1.0
-// @API для сбора данных сервисных станций
+// @title       Repair App API
+// @version     9.0
+// @description API Server for TodoList Application
 
-// @host localhost:443
+// @host     carsrv.shilov.pro
 // @BasePath /
 
 // @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name Authorization
+// @in                         header
+// @name                       Authorization
 
 func main() {
 

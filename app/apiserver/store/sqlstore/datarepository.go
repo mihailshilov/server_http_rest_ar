@@ -202,6 +202,9 @@ func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
 
+	//ctx.Value("test")
+	context.WithValue(ctx, "1", "123")
+
 	tx, err := r.store.dbPostgres.Begin(context.Background())
 	if err != nil {
 		logger.ErrorLogger.Println(err)

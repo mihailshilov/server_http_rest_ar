@@ -4,10 +4,6 @@ go 1.18
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/PuerkitoBio/purell v1.2.0 // indirect
-	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/spec v0.20.7 // indirect
@@ -28,14 +24,7 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
-	github.com/swaggo/http-swagger v1.3.3 // indirect
-	github.com/swaggo/http-swagger/example/gorilla v0.0.0-20220809182543-c8d62bfd8fdb // indirect
-	github.com/swaggo/swag v1.8.6 // indirect
-	github.com/urfave/cli/v2 v2.17.1 // indirect
-	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be // indirect
 	golang.org/x/net v0.0.0-20221002022538-bcab6841153b // indirect
 	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
@@ -52,5 +41,8 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/sirupsen/logrus v1.9.0
+	github.com/swaggo/http-swagger v1.3.3
+	github.com/swaggo/http-swagger/example/gorilla v0.0.0-20220809182543-c8d62bfd8fdb
+	github.com/swaggo/swag v1.8.6
 	gopkg.in/yaml.v2 v2.4.0
 )

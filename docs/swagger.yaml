@@ -1,9 +1,10 @@
 basePath: /
-host: localhost:443
+host: carsrv.shilov.pro
 info:
   contact: {}
-  title: Service App API
-  version: "1.0"
+  description: API Server for TodoList Application
+  title: Repair App API
+  version: "9.0"
 paths: {}
 securityDefinitions:
   ApiKeyAuth:
