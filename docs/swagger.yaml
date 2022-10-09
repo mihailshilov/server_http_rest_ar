@@ -1,14 +1,79 @@
 basePath: /
-host: carsrv.shilov.pro
+definitions:
+  model.DataRequest:
+    properties:
+      date_time_inf:
+        type: string
+      date_time_req:
+        type: string
+      id_dep:
+        type: string
+      id_org:
+        type: string
+      id_request:
+        type: string
+      responsible:
+        type: string
+    required:
+    - date_time_req
+    - id_dep
+    - id_org
+    - id_request
+    - responsible
+    type: object
+  model.Response:
+    properties:
+      response:
+        type: string
+      status:
+        type: string
+    type: object
+host: /
 info:
-  contact: {}
-  description: API Server for TodoList Application
+  contact:
+    email: soberkoder@swagger.io
+    name: API Support
+  description: API Server for service stations Application
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
   title: Repair App API
-  version: "9.0"
-paths: {}
-securityDefinitions:
-  ApiKeyAuth:
-    in: header
-    name: Authorization
-    type: apiKey
+  version: "1.0"
+paths:
+  /auth/servicerequests/:
+    post:
+      consumes:
+      - application/json
+      description: Создать заявку
+      operationId: create-request
+      parameters:
+      - description: list info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: Создать заявку
+      tags:
+      - requests
+  /authentication/:
+    post:
+      consumes:
+      - application/json
+      description: Auth Login
+      operationId: auth-login
+      produces:
+      - application/json
+      responses: {}
+      summary: Auth Login
+      tags:
+      - auth
 swagger: "2.0"

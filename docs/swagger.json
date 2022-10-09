@@ -1,19 +1,116 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "API Server for TodoList Application",
+        "description": "API Server for service stations Application",
         "title": "Repair App API",
-        "contact": {},
-        "version": "9.0"
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "email": "soberkoder@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
     },
-    "host": "carsrv.shilov.pro",
+    "host": "/",
     "basePath": "/",
-    "paths": {},
-    "securityDefinitions": {
-        "ApiKeyAuth": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
+    "paths": {
+        "/auth/servicerequests/": {
+            "post": {
+                "description": "Создать заявку",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "requests"
+                ],
+                "summary": "Создать заявку",
+                "operationId": "create-request",
+                "parameters": [
+                    {
+                        "description": "list info",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/authentication/": {
+            "post": {
+                "description": "Auth Login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Auth Login",
+                "operationId": "auth-login",
+                "responses": {}
+            }
+        }
+    },
+    "definitions": {
+        "model.DataRequest": {
+            "type": "object",
+            "required": [
+                "date_time_req",
+                "id_dep",
+                "id_org",
+                "id_request",
+                "responsible"
+            ],
+            "properties": {
+                "date_time_inf": {
+                    "type": "string"
+                },
+                "date_time_req": {
+                    "type": "string"
+                },
+                "id_dep": {
+                    "type": "string"
+                },
+                "id_org": {
+                    "type": "string"
+                },
+                "id_request": {
+                    "type": "string"
+                },
+                "responsible": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Response": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
         }
     }
 }

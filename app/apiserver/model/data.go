@@ -6,9 +6,9 @@ type Requests struct {
 }
 
 type DataRequest struct {
-	ИдЗаявки                string `json:"id_request" validate:"required"`    //*
-	ДатаВремяЗаявки         string `json:"date_time_req" validate:"required"` //*
-	ДатаВремяИнформирования string `json:"date_time_inf,omitempty"` //*
+	ИдЗаявки                string `json:"id_request" validate:"required"`
+	ДатаВремяЗаявки         string `json:"date_time_req" validate:"required"`
+	ДатаВремяИнформирования string `json:"date_time_inf,omitempty"`
 	Ответственный           string `json:"responsible" validate:"required"`
 	ИдОрганизации           string `json:"id_org" validate:"required"`
 	ИдПодразделения         string `json:"id_dep" validate:"required"`
@@ -45,7 +45,7 @@ type ConsOrders struct {
 
 type DataConsOrder struct {
 	ИдСводногоЗаказНаряда string `json:"id_cons_order" validate:"required"`    //*
-	ИдЗаявки              string `json:"id_request,omitempty"`       //*
+	ИдЗаявки              string `json:"id_request,omitempty"`                 //*
 	ДатаВремяСоздания     string `json:"date_time_create" validate:"required"` //*
 	Ответственный         string `json:"responsible" validate:"required"`
 	ИдОрганизации         string `json:"id_org" validate:"required"`
@@ -78,17 +78,17 @@ type DataPart struct {
 	ИдЗаказНаряда   string `json:"id_order"` //*
 	ИдОрганизации   string `json:"id_org"`
 	ИдПодразделения string `json:"id_dep"`
-	OrderParts   	`json:"parts"`
+	OrderParts      `json:"parts"`
 }
 
 type OrderParts []struct {
-	Наименование		string `json:"name"`
-	КаталожныйНомер		string `json:"code_catalog"`
-	ЧертежныйНомер		string `json:"code_drawing"`
-	Количество			string `json:"number"`
-	ЕдИзм				string `json:"units"`
-	Стоимость			string `json:"price"`
-	НДС					string `json:"vat"`
+	Наименование    string `json:"name"`
+	КаталожныйНомер string `json:"code_catalog"`
+	ЧертежныйНомер  string `json:"code_drawing"`
+	Количество      string `json:"number"`
+	ЕдИзм           string `json:"units"`
+	Стоимость       string `json:"price"`
+	НДС             string `json:"vat"`
 }
 
 //работы
@@ -100,14 +100,14 @@ type DataWork struct {
 	ИдЗаказНаряда   string `json:"id_order"` //*
 	ИдОрганизации   string `json:"id_org"`
 	ИдПодразделения string `json:"id_dep"`
-	OrderWorks  	`json:"works"`
+	OrderWorks      `json:"works"`
 }
 
 type OrderWorks []struct {
-	Наименование			   	string `json:"name"`
-	КодОперации    				string `json:"code"`  /// не об
-	НормативнаяТрудоёмкость    	string `json:"complexity"`
-	СтоимостьНЧ    				string `json:"price_hour"`
+	Наименование            string `json:"name"`
+	КодОперации             string `json:"code"` /// не об
+	НормативнаяТрудоёмкость string `json:"complexity"`
+	СтоимостьНЧ             string `json:"price_hour"`
 }
 
 //заказ наряд создание

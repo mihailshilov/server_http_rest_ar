@@ -21,6 +21,18 @@ import (
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
 
+// @title Repair App API
+// @version 1.0
+// @description API Server for service stations Application
+// @termsOfService http://swagger.io/terms/
+// @contact.name API Support
+// @contact.email soberkoder@swagger.io
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @host /
+// @BasePath /
+// @query.collection.format multi
+
 //errors
 
 var (
@@ -98,7 +110,7 @@ func (s *server) configureRouter() {
 
 	//s.router.HandleFunc("/swagger", s.handleSwagger()).Methods("GET")
 	s.router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
-		httpSwagger.URL("https://carsrv.shilov.pro/swagger/doc.json"), //The url pointing to API definition
+		httpSwagger.URL("doc.json"), //The url pointing to API definition
 		httpSwagger.DeepLinking(true),
 		httpSwagger.DocExpansion("none"),
 		httpSwagger.DomID("swagger-ui"),
@@ -119,7 +131,14 @@ func (s *server) configureRouter() {
 
 }
 
-//handle Auth
+// HandleAuth godoc
+// @Summary Auth Login
+// @Description Auth Login
+// @Tags auth
+// @ID auth-login
+// @Accept  json
+// @Produce  json
+// @Router /authentication/ [post]
 func (s *server) handleAuth() http.HandlerFunc {
 
 	var req model.User
@@ -176,21 +195,16 @@ func (s *server) middleWare(next http.Handler) http.Handler {
 
 }
 
+// handleRequests godoc
 // @Summary Создать заявку
-// @Security ApiKeyAuth
 // @Tags requests
 // @Description Создать заявку
 // @ID create-request
 // @Accept  json
 // @Produce  json
-// @Param input body todo.TodoList true "list info"
-// @Success 200 {integer} integer 1
-// @Failure 400,404 {object} errorResponse
-// @Failure 500 {object} errorResponse
-// @Failure default {object} errorResponse
-// @Router /api/lists [post]
-
-//handle service requests
+// @Param input body model.DataRequest true "list info"
+// @Success 200 {object} model.Response "OK"
+// @Router /auth/servicerequests/ [post]
 func (s *server) handleRequests() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {

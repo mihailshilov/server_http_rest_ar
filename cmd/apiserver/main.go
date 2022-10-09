@@ -7,17 +7,6 @@ import (
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
 
-// @title       Repair App API
-// @version     9.0
-// @description API Server for TodoList Application
-
-// @host     carsrv.shilov.pro
-// @BasePath /
-
-// @securityDefinitions.apikey ApiKeyAuth
-// @in                         header
-// @name                       Authorization
-
 func main() {
 
 	config, err := model.NewConfig()
