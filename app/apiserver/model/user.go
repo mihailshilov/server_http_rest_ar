@@ -4,7 +4,7 @@ import "time"
 
 //User
 type User struct {
-	ID     int
+	ID     int    `json:"-"`
 	Login  string `json:"login"`
 	Secret string `json:"secret"`
 }
@@ -27,8 +27,8 @@ type AccessDetails struct {
 
 //response struct
 type Response struct {
-	Status   string `json:"status"`
-	Response string `json:"response"`
+	Status   string `json:"status" example:"OK"`
+	Response string `json:"response" example:"data_received"`
 }
 
 //response struct booking

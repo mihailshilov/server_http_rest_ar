@@ -54,6 +54,43 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 
 }
 
+//informs
+func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
+
+	query := `insert into requests ("ТипДокумента", "ИдДокумента", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОтправки", "ДатаВремяДоставки") values($1, $2, $3, $4, $5, $6)`
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	_, err = tx.Exec(ctx, query,
+		data.DataInform.ТипДокумента,
+		data.DataInform.ИдДокумента,
+		data.DataInform.ИдОрганизации,
+		data.DataInform.ИдПодразделения,
+		data.DataInform.ДатаВремяОтправки,
+		data.DataInform.ДатаВремяДоставки,
+	)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	return nil
+
+}
+
 //orders
 func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 

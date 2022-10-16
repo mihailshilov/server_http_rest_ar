@@ -1,5 +1,121 @@
 basePath: /
 definitions:
+  model.DataConsOrder:
+    properties:
+      date_time_create:
+        type: string
+      id_cons_order:
+        type: string
+      id_dep:
+        type: string
+      id_org:
+        type: string
+      id_request:
+        type: string
+      responsible:
+        type: string
+    required:
+    - date_time_create
+    - id_cons_order
+    - id_dep
+    - id_org
+    - responsible
+    type: object
+  model.DataInform:
+    properties:
+      date_time_create:
+        type: string
+      date_time_delivery:
+        type: string
+      id_dep:
+        type: string
+      id_doc:
+        type: string
+      id_org:
+        type: string
+      type_doc:
+        type: string
+    required:
+    - id_dep
+    - id_doc
+    - id_org
+    - type_doc
+    type: object
+  model.DataOrder:
+    properties:
+      date_time_create:
+        type: string
+      date_time_form:
+        type: string
+      date_time_open:
+        type: string
+      g_num:
+        type: string
+      id_cons_order:
+        type: string
+      id_dep:
+        type: string
+      id_order:
+        type: string
+      id_org:
+        type: string
+      id_request:
+        type: string
+      mileage:
+        type: string
+      order_type:
+        type: string
+      re_repair:
+        type: string
+      reason:
+        description: reason
+        type: string
+      responsible:
+        type: string
+      vin0:
+        type: string
+      vin1:
+        type: string
+    required:
+    - date_time_create
+    - date_time_open
+    - id_dep
+    - id_order
+    - id_org
+    - order_type
+    - re_repair
+    - reason
+    - responsible
+    - vin0
+    type: object
+  model.DataPart:
+    properties:
+      OrderParts:
+        items:
+          properties:
+            code_catalog:
+              type: string
+            code_drawing:
+              type: string
+            name:
+              type: string
+            number:
+              type: string
+            price:
+              type: string
+            units:
+              type: string
+            vat:
+              type: string
+          type: object
+        type: array
+      id_dep:
+        type: string
+      id_order:
+        type: string
+      id_org:
+        type: string
+    type: object
   model.DataRequest:
     properties:
       date_time_inf:
@@ -21,26 +137,182 @@ definitions:
     - id_request
     - responsible
     type: object
+  model.DataStatus:
+    properties:
+      OrderStatuses:
+        items:
+          properties:
+            date_time_status:
+              type: string
+            status:
+              type: string
+          type: object
+        type: array
+      id_dep:
+        type: string
+      id_order:
+        type: string
+      id_org:
+        type: string
+    type: object
+  model.DataWork:
+    properties:
+      OrderWorks:
+        items:
+          properties:
+            code:
+              type: string
+            complexity:
+              type: string
+            name:
+              type: string
+            price_hour:
+              type: string
+          type: object
+        type: array
+      id_dep:
+        type: string
+      id_order:
+        type: string
+      id_org:
+        type: string
+    type: object
   model.Response:
     properties:
       response:
+        example: data_received
         type: string
       status:
+        example: OK
         type: string
     type: object
-host: /
+  model.Token_exp:
+    properties:
+      exp:
+        type: string
+      token:
+        type: string
+    type: object
+  model.User:
+    properties:
+      login:
+        type: string
+      secret:
+        type: string
+    type: object
+host: https://carsrv.st.tech
 info:
   contact:
     email: soberkoder@swagger.io
     name: API Support
-  description: API Server for service stations Application
+  description: API-сервер для сбора данных о работе сервисных станций стт
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Repair App API
+  title: API для сервисных станций СТТ
   version: "1.0"
 paths:
+  /auth/consorders/:
+    post:
+      consumes:
+      - application/json
+      description: Создать сводный заказ-наряд
+      operationId: create-consorder
+      parameters:
+      - description: consOrder info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataConsOrder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Создать сводный заказ-наряд
+      tags:
+      - Отправка данных
+  /auth/orders/:
+    post:
+      consumes:
+      - application/json
+      description: Создать заказ-наряд
+      operationId: create-order
+      parameters:
+      - description: order info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataOrder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Создать заказ-наряд
+      tags:
+      - Отправка данных
+  /auth/parts/:
+    post:
+      consumes:
+      - application/json
+      description: Добавить запчасти заказ-наряда
+      operationId: create-parts
+      parameters:
+      - description: parts info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataPart'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Добавить запчасти
+      tags:
+      - Отправка данных
+  /auth/serviceinform/:
+    post:
+      consumes:
+      - application/json
+      description: Создать информировние
+      operationId: create-inform
+      parameters:
+      - description: inform info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataInform'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Создать информирование
+      tags:
+      - Отправка данных
   /auth/servicerequests/:
     post:
       consumes:
@@ -48,7 +320,7 @@ paths:
       description: Создать заявку
       operationId: create-request
       parameters:
-      - description: list info
+      - description: request info
         in: body
         name: input
         required: true
@@ -61,19 +333,87 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.Response'
+      security:
+      - ApiKeyAuth: []
       summary: Создать заявку
       tags:
-      - requests
+      - Отправка данных
+  /auth/statuses/:
+    post:
+      consumes:
+      - application/json
+      description: Добавить статус заказ-наряда
+      operationId: create-status
+      parameters:
+      - description: status info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataStatus'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Добавить статус
+      tags:
+      - Отправка данных
+  /auth/works/:
+    post:
+      consumes:
+      - application/json
+      description: Добавить работы заказ-наряда
+      operationId: create-works
+      parameters:
+      - description: works info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataWork'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Добавить работы
+      tags:
+      - Отправка данных
   /authentication/:
     post:
       consumes:
       - application/json
       description: Auth Login
       operationId: auth-login
+      parameters:
+      - description: user info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.User'
       produces:
       - application/json
-      responses: {}
-      summary: Auth Login
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Token_exp'
+      summary: Авторизация
       tags:
-      - auth
+      - Авторизация
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

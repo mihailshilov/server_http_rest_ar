@@ -21,17 +21,21 @@ import (
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
 
-// @title Repair App API
+// @title API для сервисных станций СТТ
 // @version 1.0
-// @description API Server for service stations Application
+// @oas 3
+// @description API-сервер для сбора данных о работе сервисных станций стт
 // @termsOfService http://swagger.io/terms/
 // @contact.name API Support
 // @contact.email soberkoder@swagger.io
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-// @host /
+// @host https://carsrv.st.tech
 // @BasePath /
 // @query.collection.format multi
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 
 //errors
 
@@ -114,6 +118,7 @@ func (s *server) configureRouter() {
 		httpSwagger.DeepLinking(true),
 		httpSwagger.DocExpansion("none"),
 		httpSwagger.DomID("swagger-ui"),
+		//httpSwagger.Plugins([]string),
 	)).Methods(http.MethodGet)
 
 	s.router.HandleFunc("/authentication", s.handleAuth()).Methods("POST")
@@ -128,16 +133,19 @@ func (s *server) configureRouter() {
 	auth.HandleFunc("/servicestatuses", s.handleStatuses()).Methods("POST")
 	auth.HandleFunc("/serviceparts", s.handleParts()).Methods("POST")
 	auth.HandleFunc("/serviceworks", s.handleWorks()).Methods("POST")
+	auth.HandleFunc("/serviceinform", s.handleInforms()).Methods("POST")
 
 }
 
 // HandleAuth godoc
-// @Summary Auth Login
+// @Summary Авторизация
 // @Description Auth Login
-// @Tags auth
+// @Tags Авторизация
 // @ID auth-login
 // @Accept  json
 // @Produce  json
+// @Param input body model.User true "user info"
+// @Success 200 {object} model.Token_exp "OK"
 // @Router /authentication/ [post]
 func (s *server) handleAuth() http.HandlerFunc {
 
@@ -197,14 +205,15 @@ func (s *server) middleWare(next http.Handler) http.Handler {
 
 // handleRequests godoc
 // @Summary Создать заявку
-// @Tags requests
+// @Tags Отправка данных
 // @Description Создать заявку
 // @ID create-request
 // @Accept  json
 // @Produce  json
-// @Param input body model.DataRequest true "list info"
+// @Param input body model.DataRequest true "request info"
 // @Success 200 {object} model.Response "OK"
 // @Router /auth/servicerequests/ [post]
+// @Security ApiKeyAuth
 func (s *server) handleRequests() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -237,7 +246,60 @@ func (s *server) handleRequests() http.HandlerFunc {
 
 }
 
-//handle service consolidated orders
+// handleInforms godoc
+// @Summary Создать информирование
+// @Tags Отправка данных
+// @Description Создать информировние
+// @ID create-inform
+// @Accept  json
+// @Produce  json
+// @Param input body model.DataInform true "inform info"
+// @Success 200 {object} model.Response "OK"
+// @Router /auth/serviceinform/ [post]
+// @Security ApiKeyAuth
+func (s *server) handleInforms() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		req := model.Informs{}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			logger.ErrorLogger.Println(err)
+			return
+		}
+
+		//fmt.Println(req) //debug
+
+		logger.InfoLogger.Println("good request )")
+		if err := s.validate.Struct(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := s.store.Data().QueryInsertInforms(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+
+	}
+
+}
+
+// handleConsOrders godoc
+// @Summary Создать сводный заказ-наряд
+// @Tags Отправка данных
+// @Description Создать сводный заказ-наряд
+// @ID create-consorder
+// @Accept  json
+// @Produce  json
+// @Param input body model.DataConsOrder true "consOrder info"
+// @Success 200 {object} model.Response "OK"
+// @Router /auth/consorders/ [post]
+// @Security ApiKeyAuth
 func (s *server) handleConsOrders() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -267,7 +329,17 @@ func (s *server) handleConsOrders() http.HandlerFunc {
 
 }
 
-//handle service orders
+// handleOrders godoc
+// @Summary Создать заказ-наряд
+// @Tags Отправка данных
+// @Description Создать заказ-наряд
+// @ID create-order
+// @Accept  json
+// @Produce  json
+// @Param input body model.DataOrder true "order info"
+// @Success 200 {object} model.Response "OK"
+// @Router /auth/orders/ [post]
+// @Security ApiKeyAuth
 func (s *server) handleOrders() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -298,7 +370,17 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 }
 
-//handle service statuses
+// handleStatuses godoc
+// @Summary Добавить статус
+// @Tags Отправка данных
+// @Description Добавить статус заказ-наряда
+// @ID create-status
+// @Accept  json
+// @Produce  json
+// @Param input body model.DataStatus true "status info"
+// @Success 200 {object} model.Response "OK"
+// @Router /auth/statuses/ [post]
+// @Security ApiKeyAuth
 func (s *server) handleStatuses() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -331,7 +413,17 @@ func (s *server) handleStatuses() http.HandlerFunc {
 
 }
 
-//handle service parts
+// handleParts godoc
+// @Summary Добавить запчасти
+// @Tags Отправка данных
+// @Description Добавить запчасти заказ-наряда
+// @ID create-parts
+// @Accept  json
+// @Produce  json
+// @Param input body model.DataPart true "parts info"
+// @Success 200 {object} model.Response "OK"
+// @Router /auth/parts/ [post]
+// @Security ApiKeyAuth
 func (s *server) handleParts() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -365,7 +457,17 @@ func (s *server) handleParts() http.HandlerFunc {
 
 }
 
-//handle service works
+// handleWorks godoc
+// @Summary Добавить работы
+// @Tags Отправка данных
+// @Description Добавить работы заказ-наряда
+// @ID create-works
+// @Accept  json
+// @Produce  json
+// @Param input body model.DataWork true "works info"
+// @Success 200 {object} model.Response "OK"
+// @Router /auth/works/ [post]
+// @Security ApiKeyAuth
 func (s *server) handleWorks() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {

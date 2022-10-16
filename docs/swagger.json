@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "API Server for service stations Application",
-        "title": "Repair App API",
+        "description": "API-сервер для сбора данных о работе сервисных станций стт",
+        "title": "API для сервисных станций СТТ",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
@@ -14,11 +14,176 @@
         },
         "version": "1.0"
     },
-    "host": "/",
+    "host": "https://carsrv.st.tech",
     "basePath": "/",
     "paths": {
+        "/auth/consorders/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создать сводный заказ-наряд",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Отправка данных"
+                ],
+                "summary": "Создать сводный заказ-наряд",
+                "operationId": "create-consorder",
+                "parameters": [
+                    {
+                        "description": "consOrder info",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataConsOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/orders/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создать заказ-наряд",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Отправка данных"
+                ],
+                "summary": "Создать заказ-наряд",
+                "operationId": "create-order",
+                "parameters": [
+                    {
+                        "description": "order info",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/parts/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Добавить запчасти заказ-наряда",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Отправка данных"
+                ],
+                "summary": "Добавить запчасти",
+                "operationId": "create-parts",
+                "parameters": [
+                    {
+                        "description": "parts info",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataPart"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/serviceinform/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создать информировние",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Отправка данных"
+                ],
+                "summary": "Создать информирование",
+                "operationId": "create-inform",
+                "parameters": [
+                    {
+                        "description": "inform info",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataInform"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/servicerequests/": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Создать заявку",
                 "consumes": [
                     "application/json"
@@ -27,18 +192,98 @@
                     "application/json"
                 ],
                 "tags": [
-                    "requests"
+                    "Отправка данных"
                 ],
                 "summary": "Создать заявку",
                 "operationId": "create-request",
                 "parameters": [
                     {
-                        "description": "list info",
+                        "description": "request info",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.DataRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/statuses/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Добавить статус заказ-наряда",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Отправка данных"
+                ],
+                "summary": "Добавить статус",
+                "operationId": "create-status",
+                "parameters": [
+                    {
+                        "description": "status info",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataStatus"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/works/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Добавить работы заказ-наряда",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Отправка данных"
+                ],
+                "summary": "Добавить работы",
+                "operationId": "create-works",
+                "parameters": [
+                    {
+                        "description": "works info",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataWork"
                         }
                     }
                 ],
@@ -62,15 +307,201 @@
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "Авторизация"
                 ],
-                "summary": "Auth Login",
+                "summary": "Авторизация",
                 "operationId": "auth-login",
-                "responses": {}
+                "parameters": [
+                    {
+                        "description": "user info",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Token_exp"
+                        }
+                    }
+                }
             }
         }
     },
     "definitions": {
+        "model.DataConsOrder": {
+            "type": "object",
+            "required": [
+                "date_time_create",
+                "id_cons_order",
+                "id_dep",
+                "id_org",
+                "responsible"
+            ],
+            "properties": {
+                "date_time_create": {
+                    "type": "string"
+                },
+                "id_cons_order": {
+                    "type": "string"
+                },
+                "id_dep": {
+                    "type": "string"
+                },
+                "id_org": {
+                    "type": "string"
+                },
+                "id_request": {
+                    "type": "string"
+                },
+                "responsible": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.DataInform": {
+            "type": "object",
+            "required": [
+                "id_dep",
+                "id_doc",
+                "id_org",
+                "type_doc"
+            ],
+            "properties": {
+                "date_time_create": {
+                    "type": "string"
+                },
+                "date_time_delivery": {
+                    "type": "string"
+                },
+                "id_dep": {
+                    "type": "string"
+                },
+                "id_doc": {
+                    "type": "string"
+                },
+                "id_org": {
+                    "type": "string"
+                },
+                "type_doc": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.DataOrder": {
+            "type": "object",
+            "required": [
+                "date_time_create",
+                "date_time_open",
+                "id_dep",
+                "id_order",
+                "id_org",
+                "order_type",
+                "re_repair",
+                "reason",
+                "responsible",
+                "vin0"
+            ],
+            "properties": {
+                "date_time_create": {
+                    "type": "string"
+                },
+                "date_time_form": {
+                    "type": "string"
+                },
+                "date_time_open": {
+                    "type": "string"
+                },
+                "g_num": {
+                    "type": "string"
+                },
+                "id_cons_order": {
+                    "type": "string"
+                },
+                "id_dep": {
+                    "type": "string"
+                },
+                "id_order": {
+                    "type": "string"
+                },
+                "id_org": {
+                    "type": "string"
+                },
+                "id_request": {
+                    "type": "string"
+                },
+                "mileage": {
+                    "type": "string"
+                },
+                "order_type": {
+                    "type": "string"
+                },
+                "re_repair": {
+                    "type": "string"
+                },
+                "reason": {
+                    "description": "reason",
+                    "type": "string"
+                },
+                "responsible": {
+                    "type": "string"
+                },
+                "vin0": {
+                    "type": "string"
+                },
+                "vin1": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.DataPart": {
+            "type": "object",
+            "properties": {
+                "OrderParts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "code_catalog": {
+                                "type": "string"
+                            },
+                            "code_drawing": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "number": {
+                                "type": "string"
+                            },
+                            "price": {
+                                "type": "string"
+                            },
+                            "units": {
+                                "type": "string"
+                            },
+                            "vat": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "id_dep": {
+                    "type": "string"
+                },
+                "id_order": {
+                    "type": "string"
+                },
+                "id_org": {
+                    "type": "string"
+                }
+            }
+        },
         "model.DataRequest": {
             "type": "object",
             "required": [
@@ -101,16 +532,109 @@
                 }
             }
         },
+        "model.DataStatus": {
+            "type": "object",
+            "properties": {
+                "OrderStatuses": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "date_time_status": {
+                                "type": "string"
+                            },
+                            "status": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "id_dep": {
+                    "type": "string"
+                },
+                "id_order": {
+                    "type": "string"
+                },
+                "id_org": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.DataWork": {
+            "type": "object",
+            "properties": {
+                "OrderWorks": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "code": {
+                                "type": "string"
+                            },
+                            "complexity": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "price_hour": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "id_dep": {
+                    "type": "string"
+                },
+                "id_order": {
+                    "type": "string"
+                },
+                "id_org": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Response": {
             "type": "object",
             "properties": {
                 "response": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "data_received"
                 },
                 "status": {
+                    "type": "string",
+                    "example": "OK"
+                }
+            }
+        },
+        "model.Token_exp": {
+            "type": "object",
+            "properties": {
+                "exp": {
+                    "type": "string"
+                },
+                "token": {
                     "type": "string"
                 }
             }
+        },
+        "model.User": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string"
+                },
+                "secret": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }
