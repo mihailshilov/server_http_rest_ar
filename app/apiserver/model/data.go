@@ -38,7 +38,7 @@ type DataOrder struct {
 	ИдЗаявки                string `json:"id_request,omitempty"`
 	ИдСводногоЗаказНаряда   string `json:"id_cons_order,omitempty"`
 	ДатаВремяСоздания       string `json:"date_time_create" validate:"required"`
-	ДатаВремяОткрытия       string `json:"date_time_open" validate:"required"`
+	ДатаВремяОткрытия       string `json:"date_time_open" validate:"required,yyyy-mm-ddThh:mm:ss"`
 	ВидОбращения            string `json:"order_type" validate:"required"`
 	ПовторныйРемонт         string `json:"re_repair" validate:"required"`
 	ПричинаОбращения        string `json:"reason" validate:"required"` //reason

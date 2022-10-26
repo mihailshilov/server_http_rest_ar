@@ -57,7 +57,7 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 //informs
 func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 
-	query := `insert into requests ("ТипДокумента", "ИдДокумента", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОтправки", "ДатаВремяДоставки") values($1, $2, $3, $4, $5, $6)`
+	query := `insert into informs ("ТипДокумента", "ИдДокумента", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОтправки", "ДатаВремяДоставки") values($1, $2, $3, $4, $5, $6)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
