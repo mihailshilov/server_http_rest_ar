@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/store"
 
