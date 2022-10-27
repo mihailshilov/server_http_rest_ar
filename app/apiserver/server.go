@@ -57,26 +57,22 @@ type server struct {
 	store    store.Store
 	config   *model.Service
 	client   *http.Client
-	
+	uni      *ut.UniversalTranslator
 }
 
-
-
-
-
-
-
-
 func newServer(store store.Store, config *model.Service, client *http.Client) *server {
+	ru := ru.New()
+
 	s := &server{
 		router:   mux.NewRouter(),
 		validate: validator.New(),
 		store:    store,
 		config:   config,
 		client:   client,
+		uni:      ut.New(ru, ru),
 	}
 	s.configureRouter()
-	
+
 	return s
 }
 
@@ -359,11 +355,14 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 		req := model.Orders{}
 
-		uni := *ut.UniversalTranslator //перевод
-		ru_translations.RegisterDefaultTranslations(validate, trans)
-		ru := ru.New() //перевод
-		uni = ut.New(ru, ru) //перевод
-		trans, _ := uni.GetTranslator("ru")
+		// uni := *ut.UniversalTranslator //перевод
+		// ru_translations.RegisterDefaultTranslations(validate, trans)
+		// ru := ru.New() //перевод
+		// uni = ut.New(ru, ru) //перевод
+		// trans, _ := uni.GetTranslator("ru")
+
+		trans, _ := s.uni.GetTranslator("ru")
+		ru_translations.RegisterDefaultTranslations(s.validate, trans)
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			s.error(w, r, http.StatusBadRequest, err)
@@ -377,10 +376,17 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
-			
+
+			trans, _ := s.uni.GetTranslator("ru")
+			ru_translations.RegisterDefaultTranslations(s.validate, trans)
 			errs := err.(validator.ValidationErrors)
-			trerr := errs.Translate(trans)
-			s.error(w, r, http.StatusBadRequest, trerr)
+
+			for _, e := range errs {
+				// can translate each error one at a time.
+				simpleError := errors.New(e.Translate(trans))
+				s.error(w, r, http.StatusBadRequest, simpleError)
+			}
+
 			return
 		}
 
