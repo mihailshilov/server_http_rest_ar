@@ -8,7 +8,7 @@ type Requests struct {
 type DataRequest struct {
 	ИдЗаявки                string `json:"id_request" validate:"required"`
 	ДатаВремяЗаявки         string `json:"date_time_req" validate:"required"`
-	ДатаВремяИнформирования string `json:"date_time_inf,omitempty"`
+	ДатаВремяИнформирования string `json:"date_time_inf"`
 	Ответственный           string `json:"responsible" validate:"required"`
 	ИдОрганизации           string `json:"id_org" validate:"required"`
 	ИдПодразделения         string `json:"id_dep" validate:"required"`
@@ -24,8 +24,8 @@ type DataInform struct {
 	ИдДокумента       string `json:"id_doc" validate:"required"`
 	ИдОрганизации     string `json:"id_org" validate:"required"`
 	ИдПодразделения   string `json:"id_dep" validate:"required"`
-	ДатаВремяОтправки string `json:"date_time_create,omitempty"`
-	ДатаВремяДоставки string `json:"date_time_delivery,omitempty"`
+	ДатаВремяОтправки string `json:"date_time_create"`
+	ДатаВремяДоставки string `json:"date_time_delivery"`
 }
 
 //orders
@@ -35,21 +35,21 @@ type Orders struct {
 
 type DataOrder struct {
 	ИдЗаказНаряда           string `json:"id_order" validate:"required"`
-	ИдЗаявки                string `json:"id_request,omitempty"`
-	ИдСводногоЗаказНаряда   string `json:"id_cons_order,omitempty"`
+	ИдЗаявки                string `json:"id_request"`
+	ИдСводногоЗаказНаряда   string `json:"id_cons_order"`
 	ДатаВремяСоздания       string `json:"date_time_create" validate:"required"`
 	ДатаВремяОткрытия       string `json:"date_time_open" validate:"required,yyyy-mm-ddThh:mm:ss"`
 	ВидОбращения            string `json:"order_type" validate:"required"`
 	ПовторныйРемонт         string `json:"re_repair" validate:"required"`
 	ПричинаОбращения        string `json:"reason" validate:"required"` //reason
 	VINбазовый              string `json:"vin0" validate:"required"`
-	VINпослеДоработки       string `json:"vin1,omitempty"`
-	ДатаВремяИнформирования string `json:"date_time_form,omitempty"`
+	VINпослеДоработки       string `json:"vin1"`
+	ДатаВремяИнформирования string `json:"date_time_form"`
 	Ответственный           string `json:"responsible" validate:"required"`
-	ИдОрганизации           string `json:"id_org" validate:"required"`
-	ИдПодразделения         string `json:"id_dep" validate:"required"`
-	ГосНомерТС              string `json:"g_num,omitempty"`
-	ПробегТС                string `json:"mileage,omitempty"`
+	ИдОрганизации           int `json:"id_org" validate:"required"`
+	ИдПодразделения         int `json:"id_dep" validate:"required"`
+	ГосНомерТС              string `json:"g_num"`
+	ПробегТС                string `json:"mileage" validate:"required,number"`
 }
 
 //cons_orders
@@ -59,7 +59,7 @@ type ConsOrders struct {
 
 type DataConsOrder struct {
 	ИдСводногоЗаказНаряда string `json:"id_cons_order" validate:"required"`
-	ИдЗаявки              string `json:"id_request,omitempty"`
+	ИдЗаявки              string `json:"id_request"`
 	ДатаВремяСоздания     string `json:"date_time_create" validate:"required"`
 	Ответственный         string `json:"responsible" validate:"required"`
 	ИдОрганизации         string `json:"id_org" validate:"required"`

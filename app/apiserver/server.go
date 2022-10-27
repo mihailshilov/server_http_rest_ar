@@ -16,7 +16,10 @@ import (
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/store"
 
-	"github.com/go-playground/validator"
+	"github.com/go-playground/locales/ru"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	ru_translations "github.com/go-playground/validator/v10/translations/ru"
 
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
@@ -54,7 +57,15 @@ type server struct {
 	store    store.Store
 	config   *model.Service
 	client   *http.Client
+	
 }
+
+
+
+
+
+
+
 
 func newServer(store store.Store, config *model.Service, client *http.Client) *server {
 	s := &server{
@@ -65,6 +76,7 @@ func newServer(store store.Store, config *model.Service, client *http.Client) *s
 		client:   client,
 	}
 	s.configureRouter()
+	
 	return s
 }
 
@@ -231,6 +243,7 @@ func (s *server) handleRequests() http.HandlerFunc {
 		logger.InfoLogger.Println("good request )")
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
+
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
@@ -346,6 +359,12 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 		req := model.Orders{}
 
+		uni := *ut.UniversalTranslator //перевод
+		ru_translations.RegisterDefaultTranslations(validate, trans)
+		ru := ru.New() //перевод
+		uni = ut.New(ru, ru) //перевод
+		trans, _ := uni.GetTranslator("ru")
+
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			s.error(w, r, http.StatusBadRequest, err)
 			logger.ErrorLogger.Println(err)
@@ -358,7 +377,11 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
-			s.error(w, r, http.StatusBadRequest, err)
+			
+			errs := err.(validator.ValidationErrors)
+			trerr := errs.Translate(trans)
+			s.error(w, r, http.StatusBadRequest, trerr)
+			return
 		}
 
 		if err := s.store.Data().QueryInsertOrders(req); err != nil {
