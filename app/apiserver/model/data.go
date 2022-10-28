@@ -46,8 +46,8 @@ type DataOrder struct {
 	VINпослеДоработки       string `json:"vin1"`
 	ДатаВремяИнформирования string `json:"date_time_form"`
 	Ответственный           string `json:"responsible" validate:"required"`
-	ИдОрганизации           int `json:"id_org" validate:"required"`
-	ИдПодразделения         int `json:"id_dep" validate:"required"`
+	ИдОрганизации           string `json:"id_org" validate:"required"`
+	ИдПодразделения         string `json:"id_dep" validate:"required"`
 	ГосНомерТС              string `json:"g_num"`
 	ПробегТС                string `json:"mileage" validate:"required,number"`
 }
