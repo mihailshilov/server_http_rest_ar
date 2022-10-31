@@ -142,6 +142,7 @@ func (s *server) configureRouter() {
 	auth.HandleFunc("/serviceparts", s.handleParts()).Methods("POST")
 	auth.HandleFunc("/serviceworks", s.handleWorks()).Methods("POST")
 	auth.HandleFunc("/serviceinform", s.handleInforms()).Methods("POST")
+	auth.HandleFunc("/carsforsite", s.handleCarsForSite()).Methods("POST")
 
 }
 
@@ -517,6 +518,49 @@ func (s *server) handleWorks() http.HandlerFunc {
 		}
 
 		if err := s.store.Data().QueryInsertWorks(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			return
+		}
+		logger.InfoLogger.Println("good request )")
+		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+
+	}
+
+}
+
+// handleCarsForSite godoc
+// @Summary Добавить статус
+// @Tags Отправка данных
+// @Description Добавить статус заказ-наряда
+// @ID create-status
+// @Accept  json
+// @Produce  json
+// @Param input body model.DataStatus true "status info"
+// @Success 200 {object} model.Response "OK"
+// @Router /auth/statuses/ [post]
+// @Security ApiKeyAuth
+func (s *server) handleCarsForSite() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		req := model.CarsForSite{}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			logger.ErrorLogger.Println(err)
+			return
+		}
+		fmt.Println(req) //debug
+
+		//_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+
+		if err := s.validate.Struct(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := s.store.Data().QueryInsertCarsForSite(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			return
 		}

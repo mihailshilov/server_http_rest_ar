@@ -405,6 +405,66 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 
 }
 
+func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
+
+	var carsforsite [][]interface{}
+
+	carsforsiteValSlice := reflect.ValueOf(data.DataCarForSite).FieldByName("Cars").Interface().(model.Cars)
+
+	//fmt.Println(reflect.ValueOf(data))
+
+	for _, k := range carsforsiteValSlice {
+
+		var iter []interface{}
+
+		iter = append(
+			iter,
+			data.DataCarForSite.Id_org,
+			k.Vin,
+			k.Id_isk,
+			k.Flag,
+		)
+
+		carsforsite = append(carsforsite, iter)
+
+	}
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	//ctx.Value("test")
+	context.WithValue(ctx, "1", "123")
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	//CarsForSite
+	tableCarsForSite := []string{
+		"id_org",
+		"vin",
+		"id_isk",
+		"flag",
+	}
+
+	_, err = tx.CopyFrom(ctx, pgx.Identifier{"carsforsite"}, tableCarsForSite, pgx.CopyFromRows(carsforsite))
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	return nil
+
+}
+
 // func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 
 // 	var orders [][]interface{}

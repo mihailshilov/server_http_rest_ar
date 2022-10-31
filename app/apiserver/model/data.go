@@ -124,6 +124,22 @@ type OrderWorks []struct {
 	СтоимостьНЧ             string `json:"price_hour"`
 }
 
+//Машины для сайта
+type CarsForSite struct {
+	DataCarForSite DataCarForSite `json:"cars_for_site"`
+}
+
+type DataCarForSite struct {
+	Id_org   string `json:"id_org"`
+	Cars   `json:"cars"`
+}
+
+type Cars []struct {
+	Vin    		string `json:"vin"`
+	Id_isk    	string `json:"id_isk"`
+	Flag   		string `json:"flag"`
+}
+
 //заказ наряд создание
 // type DataOrder []struct {
 // 	ИдЗаказНаряд                 string `json:"id_order" validate:"required"`

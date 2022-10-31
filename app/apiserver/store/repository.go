@@ -29,4 +29,5 @@ type DataRepository interface {
 	QueryInsertParts(model.Parts) error
 	QueryInsertWorks(model.Works) error
 	QueryInsertInforms(model.Informs) error
+	QueryInsertCarsForSite(model.CarsForSite) error
 }
