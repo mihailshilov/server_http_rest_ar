@@ -362,8 +362,8 @@ func (s *server) handleOrders() http.HandlerFunc {
 		// uni = ut.New(ru, ru) //перевод
 		// trans, _ := uni.GetTranslator("ru")
 
-		trans, _ := s.uni.GetTranslator("ru")
-		ru_translations.RegisterDefaultTranslations(s.validate, trans)
+		// trans, _ := s.uni.GetTranslator("ru")
+		// ru_translations.RegisterDefaultTranslations(s.validate, trans)
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			s.error(w, r, http.StatusBadRequest, err)
@@ -382,11 +382,24 @@ func (s *server) handleOrders() http.HandlerFunc {
 			ru_translations.RegisterDefaultTranslations(s.validate, trans)
 			errs := err.(validator.ValidationErrors)
 
+			//var ErrorMessages []error
+
 			for _, e := range errs {
 				// can translate each error one at a time.
-				simpleError := errors.New(e.Translate(trans))
-				s.error(w, r, http.StatusBadRequest, simpleError)
+				if e.ActualTag() == "yyyy-mm-ddThh:mm:ss" {
+					SimpleError := errors.New(e.Field() + "Неверный формат даты")
+					s.error(w, r, http.StatusBadRequest, SimpleError)
+				} else {
+					SimpleError := errors.New(e.Translate(trans))
+					s.error(w, r, http.StatusBadRequest, SimpleError)
+				}
+
+				//ErrorMessages = append(ErrorMessages, SimpleError)
 			}
+
+			//
+			// fmt.Println(ErrorMessages)
+			// s.respond(w, r, http.StatusBadRequest, ErrorMessages)
 
 			return
 		}

@@ -130,14 +130,14 @@ type CarsForSite struct {
 }
 
 type DataCarForSite struct {
-	Id_org   string `json:"id_org"`
+	Id_org string `json:"id_org"`
 	Cars   `json:"cars"`
 }
 
 type Cars []struct {
-	Vin    		string `json:"vin"`
-	Id_isk    	string `json:"id_isk"`
-	Flag   		string `json:"flag"`
+	Vin    string `json:"vin"`
+	Id_isk string `json:"id_isk"`
+	Flag   string `json:"flag"`
 }
 
 //заказ наряд создание
