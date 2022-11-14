@@ -2,6 +2,7 @@ package sqlstore
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	_ "reflect"
 	"time"
@@ -271,6 +272,70 @@ func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 
 	return nil
 
+}
+
+func (r *DataRepository) IsOrderReal(idOrder string) error {
+	query := `select count(*) from orders where ИдЗаказНаряда like $1`
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	type Row struct {
+		count int
+	}
+
+	var rows pgx.Rows
+
+	rows, err = tx.Query(ctx, query, idOrder)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+	defer rows.Close()
+
+	var rowSlice []Row
+	for rows.Next() {
+		var r Row
+		err := rows.Scan(&r.count)
+		if err != nil {
+			return err
+		}
+		rowSlice = append(rowSlice, r)
+	}
+
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	if rowSlice[0].count == 0 {
+		err := errors.New("нет заказ-наряда")
+		logger.ErrorLogger.Println("нет заказ-наряда")
+		return err
+	}
+
+	logger.ErrorLogger.Println(rowSlice)
+	logger.ErrorLogger.Println(len(rowSlice))
+	logger.ErrorLogger.Println(rowSlice[0])
+	logger.ErrorLogger.Println(rowSlice[0].count)
+	//var id uint64
+	// err := Scan(&rows)
+	// if err != nil {
+	// 	return err
+	// }
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	return nil
 }
 
 func (r *DataRepository) QueryInsertParts(data model.Parts) error {

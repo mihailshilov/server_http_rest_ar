@@ -83,6 +83,21 @@ func IsDateCorrect(fl validator.FieldLevel) bool {
 	return DateRegex.MatchString(fl.Field().String())
 }
 
+//custome validate date format
+// func IsOrderReal(fl validator.FieldLevel) bool {
+// 	// DateRegexString := "^(19|20)\\d\\d-(0[1-9]|1[012])-([012]\\d|3[01])T([01]\\d|2[0-3]):([0-5]\\d):([0-5]\\d)$"
+// 	// DateRegex := regexp.MustCompile(DateRegexString)
+// 	// return DateRegex.MatchString(fl.Field().String())
+
+// 	if err := s.store.Data().IsOrderReal(fl); err != nil {
+// 		logger.ErrorLogger.Println(err)
+// 		return
+// 	}
+
+// 	return true
+
+// }
+
 //write new token struct
 func newToken(token string, exp time.Time) *model.Token_exp {
 	return &model.Token_exp{
@@ -382,16 +397,18 @@ func (s *server) handleOrders() http.HandlerFunc {
 			ru_translations.RegisterDefaultTranslations(s.validate, trans)
 			errs := err.(validator.ValidationErrors)
 
-			//var ErrorMessages []error
+			var ErrorMessages []string
 
 			for _, e := range errs {
-				// can translate each error one at a time.
+
 				if e.ActualTag() == "yyyy-mm-ddThh:mm:ss" {
-					SimpleError := errors.New(e.Field() + "Неверный формат даты")
-					s.error(w, r, http.StatusBadRequest, SimpleError)
+					SimpleError := e.Field() + " Неверный формат даты"
+					//s.error(w, r, http.StatusBadRequest, SimpleError)
+					ErrorMessages = append(ErrorMessages, SimpleError)
 				} else {
-					SimpleError := errors.New(e.Translate(trans))
-					s.error(w, r, http.StatusBadRequest, SimpleError)
+					SimpleError := e.Translate(trans)
+					//s.error(w, r, http.StatusBadRequest, SimpleError)
+					ErrorMessages = append(ErrorMessages, SimpleError)
 				}
 
 				//ErrorMessages = append(ErrorMessages, SimpleError)
@@ -399,7 +416,7 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 			//
 			// fmt.Println(ErrorMessages)
-			// s.respond(w, r, http.StatusBadRequest, ErrorMessages)
+			s.respond(w, r, http.StatusBadRequest, ErrorMessages)
 
 			return
 		}
@@ -479,13 +496,42 @@ func (s *server) handleParts() http.HandlerFunc {
 			return
 		}
 
-		fmt.Println('-') //debug
-		fmt.Println(req) //debug
-		fmt.Println('-') //debug
+		if err := s.store.Data().IsOrderReal(req.DataPart.ИдЗаказНаряда); err != nil {
+			logger.ErrorLogger.Println(err)
+			s.respond(w, r, http.StatusBadRequest, "Заказ-наряд не найден")
+			return
+		}
+
+		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
 
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
-			s.error(w, r, http.StatusBadRequest, err)
+
+			trans, _ := s.uni.GetTranslator("ru")
+			ru_translations.RegisterDefaultTranslations(s.validate, trans)
+			errs := err.(validator.ValidationErrors)
+
+			var ErrorMessages []string
+
+			for _, e := range errs {
+
+				if e.ActualTag() == "yyyy-mm-ddThh:mm:ss" {
+					SimpleError := e.Field() + " Неверный формат даты"
+					//s.error(w, r, http.StatusBadRequest, SimpleError)
+					ErrorMessages = append(ErrorMessages, SimpleError)
+				} else {
+					SimpleError := e.Translate(trans)
+					//s.error(w, r, http.StatusBadRequest, SimpleError)
+					ErrorMessages = append(ErrorMessages, SimpleError)
+				}
+
+				//ErrorMessages = append(ErrorMessages, SimpleError)
+			}
+
+			//
+			// fmt.Println(ErrorMessages)
+			s.respond(w, r, http.StatusBadRequest, ErrorMessages)
+
 			return
 		}
 
@@ -493,6 +539,7 @@ func (s *server) handleParts() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
+
 		logger.InfoLogger.Println("good request )")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
