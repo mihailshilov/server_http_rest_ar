@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -16,10 +18,7 @@ import (
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/store"
 
-	"github.com/go-playground/locales/ru"
-	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
-	ru_translations "github.com/go-playground/validator/v10/translations/ru"
 
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
@@ -57,11 +56,9 @@ type server struct {
 	store    store.Store
 	config   *model.Service
 	client   *http.Client
-	uni      *ut.UniversalTranslator
 }
 
 func newServer(store store.Store, config *model.Service, client *http.Client) *server {
-	ru := ru.New()
 
 	s := &server{
 		router:   mux.NewRouter(),
@@ -69,7 +66,6 @@ func newServer(store store.Store, config *model.Service, client *http.Client) *s
 		store:    store,
 		config:   config,
 		client:   client,
-		uni:      ut.New(ru, ru),
 	}
 	s.configureRouter()
 
@@ -83,20 +79,25 @@ func IsDateCorrect(fl validator.FieldLevel) bool {
 	return DateRegex.MatchString(fl.Field().String())
 }
 
-//custome validate date format
-// func IsOrderReal(fl validator.FieldLevel) bool {
-// 	// DateRegexString := "^(19|20)\\d\\d-(0[1-9]|1[012])-([012]\\d|3[01])T([01]\\d|2[0-3]):([0-5]\\d):([0-5]\\d)$"
-// 	// DateRegex := regexp.MustCompile(DateRegexString)
-// 	// return DateRegex.MatchString(fl.Field().String())
+//custom tunslate for erros
+func msgForTag(fe validator.FieldError) string {
+	switch fe.Tag() {
+	case "required":
+		return "Поле является обязательным"
+	case "number":
+		return "Поле должно быть целым числом"
+	case "min":
+		return "Нельзя передавать пустой масив"
+	case "yyyy-mm-ddThh:mm:ss":
+		return "Время указано не верно"
+	}
+	return fe.Error() // default error
+}
 
-// 	if err := s.store.Data().IsOrderReal(fl); err != nil {
-// 		logger.ErrorLogger.Println(err)
-// 		return
-// 	}
-
-// 	return true
-
-// }
+type ApiError struct {
+	Param   string
+	Message string
+}
 
 //write new token struct
 func newToken(token string, exp time.Time) *model.Token_exp {
@@ -123,6 +124,7 @@ func (s *server) error(w http.ResponseWriter, r *http.Request, code int, err err
 //write http response
 func (s *server) respond(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
 	w.WriteHeader(code)
+
 	if data != nil {
 		json.NewEncoder(w).Encode(data)
 	}
@@ -221,6 +223,8 @@ func (s *server) middleWare(next http.Handler) http.Handler {
 			return
 		}
 
+		w.Header().Add("Content-Type", "application/json")
+
 		next.ServeHTTP(w, r)
 
 	})
@@ -250,13 +254,34 @@ func (s *server) handleRequests() http.HandlerFunc {
 			return
 		}
 
-		//fmt.Println(req) //debug
-
 		logger.InfoLogger.Println("good request )")
+
+		//Валидация
+		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+
+		s.validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
+
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
 
-			s.error(w, r, http.StatusBadRequest, err)
+			errs := err.(validator.ValidationErrors)
+
+			out := make([]ApiError, len(errs))
+
+			for i, e := range errs {
+
+				out[i] = ApiError{e.Field(), msgForTag(e)}
+
+			}
+
+			s.respond(w, r, http.StatusBadRequest, out)
+
 			return
 		}
 
@@ -294,12 +319,55 @@ func (s *server) handleInforms() http.HandlerFunc {
 			return
 		}
 
-		//fmt.Println(req) //debug
-
 		logger.InfoLogger.Println("good request )")
+
+		//Проверка наличия заказ-наряда
+		if req.DataInform.ТипДокумента == "Заказ-наряд" {
+			if err := s.store.Data().IsOrderReal(req.DataInform.ИдДокумента); err != nil {
+				logger.ErrorLogger.Println(err)
+				out_order := make([]ApiError, 1)
+				out_order[0] = ApiError{"order_id", "Заказ-наряд не найден"}
+
+				s.respond(w, r, http.StatusBadRequest, out_order)
+				return
+			}
+		} else {
+			if err := s.store.Data().IsRequestReal(req.DataInform.ИдДокумента); err != nil {
+				logger.ErrorLogger.Println(err)
+				out_order := make([]ApiError, 1)
+				out_order[0] = ApiError{"order_id", "Заявка не найдена"}
+
+				s.respond(w, r, http.StatusBadRequest, out_order)
+				return
+			}
+		}
+
+		//Валидация
+		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+
+		s.validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
+
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
-			s.error(w, r, http.StatusBadRequest, err)
+
+			errs := err.(validator.ValidationErrors)
+
+			out := make([]ApiError, len(errs))
+
+			for i, e := range errs {
+
+				out[i] = ApiError{e.Field(), msgForTag(e)}
+
+			}
+
+			s.respond(w, r, http.StatusBadRequest, out)
+
 			return
 		}
 
@@ -336,10 +404,35 @@ func (s *server) handleConsOrders() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
+
 		logger.InfoLogger.Println("good request )")
+
+		//Валидация
+		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+
+		s.validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
+
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
-			s.error(w, r, http.StatusBadRequest, err)
+
+			errs := err.(validator.ValidationErrors)
+
+			out := make([]ApiError, len(errs))
+
+			for i, e := range errs {
+
+				out[i] = ApiError{e.Field(), msgForTag(e)}
+
+			}
+
+			s.respond(w, r, http.StatusBadRequest, out)
+
 			return
 		}
 
@@ -371,52 +464,37 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 		req := model.Orders{}
 
-		// uni := *ut.UniversalTranslator //перевод
-		// ru_translations.RegisterDefaultTranslations(validate, trans)
-		// ru := ru.New() //перевод
-		// uni = ut.New(ru, ru) //перевод
-		// trans, _ := uni.GetTranslator("ru")
-
-		// trans, _ := s.uni.GetTranslator("ru")
-		// ru_translations.RegisterDefaultTranslations(s.validate, trans)
-
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			s.error(w, r, http.StatusBadRequest, err)
 			logger.ErrorLogger.Println(err)
 			return
 		}
 
-		fmt.Println(r) //debug
-
+		//Валидация
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+
+		s.validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
 
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
 
-			trans, _ := s.uni.GetTranslator("ru")
-			ru_translations.RegisterDefaultTranslations(s.validate, trans)
 			errs := err.(validator.ValidationErrors)
 
-			var ErrorMessages []string
+			out := make([]ApiError, len(errs))
 
-			for _, e := range errs {
+			for i, e := range errs {
 
-				if e.ActualTag() == "yyyy-mm-ddThh:mm:ss" {
-					SimpleError := e.Field() + " Неверный формат даты"
-					//s.error(w, r, http.StatusBadRequest, SimpleError)
-					ErrorMessages = append(ErrorMessages, SimpleError)
-				} else {
-					SimpleError := e.Translate(trans)
-					//s.error(w, r, http.StatusBadRequest, SimpleError)
-					ErrorMessages = append(ErrorMessages, SimpleError)
-				}
+				out[i] = ApiError{e.Field(), msgForTag(e)}
 
-				//ErrorMessages = append(ErrorMessages, SimpleError)
 			}
 
-			//
-			// fmt.Println(ErrorMessages)
-			s.respond(w, r, http.StatusBadRequest, ErrorMessages)
+			s.respond(w, r, http.StatusBadRequest, out)
 
 			return
 		}
@@ -454,11 +532,44 @@ func (s *server) handleStatuses() http.HandlerFunc {
 		}
 		fmt.Println(req) //debug
 
+		//Проверка наличия заказ-наряда
+		if err := s.store.Data().IsOrderReal(req.DataStatus.ИдЗаказНаряда); err != nil {
+			logger.ErrorLogger.Println(err)
+			out_order := make([]ApiError, 1)
+			out_order[0] = ApiError{"order_id", "Заказ-наряд не найден"}
+
+			s.respond(w, r, http.StatusBadRequest, out_order)
+			return
+		}
+
+		//Валидация
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+
+		s.validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
 
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
-			s.error(w, r, http.StatusBadRequest, err)
+
+			errs := err.(validator.ValidationErrors)
+
+			fmt.Println(errs)
+
+			out := make([]ApiError, len(errs))
+
+			for i, e := range errs {
+
+				out[i] = ApiError{e.Field(), msgForTag(e)}
+
+			}
+
+			s.respond(w, r, http.StatusBadRequest, out)
+
 			return
 		}
 
@@ -496,41 +607,41 @@ func (s *server) handleParts() http.HandlerFunc {
 			return
 		}
 
+		//Проверка наличия заказ-наряда
 		if err := s.store.Data().IsOrderReal(req.DataPart.ИдЗаказНаряда); err != nil {
 			logger.ErrorLogger.Println(err)
-			s.respond(w, r, http.StatusBadRequest, "Заказ-наряд не найден")
+			out_order := make([]ApiError, 1)
+			out_order[0] = ApiError{"order_id", "Заказ-наряд не найден"}
+
+			s.respond(w, r, http.StatusBadRequest, out_order)
 			return
 		}
 
+		//Валидация
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+
+		s.validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
 
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
 
-			trans, _ := s.uni.GetTranslator("ru")
-			ru_translations.RegisterDefaultTranslations(s.validate, trans)
 			errs := err.(validator.ValidationErrors)
 
-			var ErrorMessages []string
+			out := make([]ApiError, len(errs))
 
-			for _, e := range errs {
+			for i, e := range errs {
 
-				if e.ActualTag() == "yyyy-mm-ddThh:mm:ss" {
-					SimpleError := e.Field() + " Неверный формат даты"
-					//s.error(w, r, http.StatusBadRequest, SimpleError)
-					ErrorMessages = append(ErrorMessages, SimpleError)
-				} else {
-					SimpleError := e.Translate(trans)
-					//s.error(w, r, http.StatusBadRequest, SimpleError)
-					ErrorMessages = append(ErrorMessages, SimpleError)
-				}
+				out[i] = ApiError{e.Field(), msgForTag(e)}
 
-				//ErrorMessages = append(ErrorMessages, SimpleError)
 			}
 
-			//
-			// fmt.Println(ErrorMessages)
-			s.respond(w, r, http.StatusBadRequest, ErrorMessages)
+			s.respond(w, r, http.StatusBadRequest, out)
 
 			return
 		}
@@ -569,11 +680,44 @@ func (s *server) handleWorks() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-		//fmt.Println(req) //debug
+		logger.InfoLogger.Println("good request )")
+
+		//Проверка наличия заказ-наряда
+		if err := s.store.Data().IsOrderReal(req.DataWork.ИдЗаказНаряда); err != nil {
+			logger.ErrorLogger.Println(err)
+			out_order := make([]ApiError, 1)
+			out_order[0] = ApiError{"order_id", "Заказ-наряд не найден"}
+
+			s.respond(w, r, http.StatusBadRequest, out_order)
+			return
+		}
+
+		//Валидация
+		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+
+		s.validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
 
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
-			s.error(w, r, http.StatusBadRequest, err)
+
+			errs := err.(validator.ValidationErrors)
+
+			out := make([]ApiError, len(errs))
+
+			for i, e := range errs {
+
+				out[i] = ApiError{e.Field(), msgForTag(e)}
+
+			}
+
+			s.respond(w, r, http.StatusBadRequest, out)
+
 			return
 		}
 
@@ -581,7 +725,7 @@ func (s *server) handleWorks() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-		logger.InfoLogger.Println("good request )")
+
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -610,13 +754,33 @@ func (s *server) handleCarsForSite() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-		fmt.Println(req) //debug
 
-		//_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+		//Валидация
+		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+
+		s.validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
 
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
-			s.error(w, r, http.StatusBadRequest, err)
+
+			errs := err.(validator.ValidationErrors)
+
+			out := make([]ApiError, len(errs))
+
+			for i, e := range errs {
+
+				out[i] = ApiError{e.Field(), msgForTag(e)}
+
+			}
+
+			s.respond(w, r, http.StatusBadRequest, out)
+
 			return
 		}
 

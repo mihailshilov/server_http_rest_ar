@@ -21,7 +21,7 @@ type DataRepository struct {
 //requests
 func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 
-	query := `insert into requests ("ИдЗаявки", "ДатаВремяЗаявки", "ДатаВремяИнформирования", "Ответственный", "ИдОрганизации", "ИдПодразделения") values($1, $2, $3, $4, $5, $6)`
+	query := `insert into requests ("ИдЗаявки", "ДатаВремяЗаявки", "ДатаВремяЗаписи", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОбновления") values($1, $2, $3, $4, $5, $6, $7)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -32,13 +32,16 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 		return err
 	}
 
+	dt := time.Now()
+
 	_, err = tx.Exec(ctx, query,
 		data.DataRequest.ИдЗаявки,
 		data.DataRequest.ДатаВремяЗаявки,
-		data.DataRequest.ДатаВремяИнформирования,
+		data.DataRequest.ДатаВремяЗаписи,
 		data.DataRequest.Ответственный,
 		data.DataRequest.ИдОрганизации,
 		data.DataRequest.ИдПодразделения,
+		dt.Format("2006-01-02T15:04:05"),
 	)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
@@ -58,7 +61,7 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 //informs
 func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 
-	query := `insert into informs ("ТипДокумента", "ИдДокумента", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОтправки", "ДатаВремяДоставки") values($1, $2, $3, $4, $5, $6)`
+	query := `insert into informs ("ТипДокумента", "ИдДокумента", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОтправки", "ДатаВремяДоставки", "ДатаВремяОбновления") values($1, $2, $3, $4, $5, $6, $7)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -69,6 +72,8 @@ func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 		return err
 	}
 
+	dt := time.Now()
+
 	_, err = tx.Exec(ctx, query,
 		data.DataInform.ТипДокумента,
 		data.DataInform.ИдДокумента,
@@ -76,6 +81,7 @@ func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 		data.DataInform.ИдПодразделения,
 		data.DataInform.ДатаВремяОтправки,
 		data.DataInform.ДатаВремяДоставки,
+		dt.Format("2006-01-02T15:04:05"),
 	)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
@@ -95,7 +101,7 @@ func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 //orders
 func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 
-	query := `insert into orders ("ИдЗаказНаряда", "ИдЗаявки", "ИдСводногоЗаказНаряда", "ДатаВремяСоздания", "ДатаВремяОткрытия", "ВидОбращения", "ПовторныйРемонт", "ПричинаОбращения", "VINбазовый", "VINпослеДоработки", "ДатаВремяИнформирования", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ГосНомерТС", "ПробегТС") values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`
+	query := `insert into orders ("ИдЗаказНаряда", "ИдЗаявки", "ИдСводногоЗаказНаряда", "ДатаВремяСоздания", "ДатаВремяОткрытия", "ВидОбращения", "ПовторныйРемонт", "ПричинаОбращения", "VINбазовый", "VINпослеДоработки", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ГосНомерТС", "ПробегТС", "ДатаВремяОбновления") values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -105,6 +111,8 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 		logger.ErrorLogger.Println(err)
 		return err
 	}
+
+	dt := time.Now()
 
 	_, err = tx.Exec(ctx, query,
 		data.DataOrder.ИдЗаказНаряда,
@@ -117,12 +125,12 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 		data.DataOrder.ПричинаОбращения,
 		data.DataOrder.VINбазовый,
 		data.DataOrder.VINпослеДоработки,
-		data.DataOrder.ДатаВремяИнформирования,
 		data.DataOrder.Ответственный,
 		data.DataOrder.ИдОрганизации,
 		data.DataOrder.ИдПодразделения,
 		data.DataOrder.ГосНомерТС,
 		data.DataOrder.ПробегТС,
+		dt.Format("2006-01-02T15:04:05"),
 	)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
@@ -142,7 +150,7 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 //cons_orders
 func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 
-	query := `insert into cons_orders ("ИдСводногоЗаказНаряда", "ИдЗаявки", "ДатаВремяСоздания", "Ответственный", "ИдОрганизации", "ИдПодразделения") values($1, $2, $3, $4, $5, $6)`
+	query := `insert into cons_orders ("ИдСводногоЗаказНаряда", "ИдЗаявки", "ДатаВремяСоздания", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОбновления") values($1, $2, $3, $4, $5, $6, $7)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -153,6 +161,8 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 		return err
 	}
 
+	dt := time.Now()
+
 	_, err = tx.Exec(ctx, query,
 		data.DataConsOrder.ИдСводногоЗаказНаряда,
 		data.DataConsOrder.ИдЗаявки,
@@ -160,6 +170,7 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 		data.DataConsOrder.Ответственный,
 		data.DataConsOrder.ИдОрганизации,
 		data.DataConsOrder.ИдПодразделения,
+		dt.Format("2006-01-02T15:04:05"),
 	)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
@@ -224,6 +235,8 @@ func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 
 		var iter []interface{}
 
+		dt := time.Now()
+
 		iter = append(
 			iter,
 			data.DataStatus.ИдЗаказНаряда,
@@ -231,6 +244,7 @@ func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 			data.DataStatus.ИдПодразделения,
 			k.Статус,
 			k.ДатаВремя,
+			dt.Format("2006-01-02T15:04:05"),
 		)
 
 		statuses = append(statuses, iter)
@@ -256,6 +270,7 @@ func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 		"ИдПодразделения",
 		"Статус",
 		"ДатаВремя",
+		"ДатаВремяОбновления",
 	}
 
 	_, err = tx.CopyFrom(ctx, pgx.Identifier{"statuses"}, tableStatuses, pgx.CopyFromRows(statuses))
@@ -319,15 +334,59 @@ func (r *DataRepository) IsOrderReal(idOrder string) error {
 		return err
 	}
 
-	logger.ErrorLogger.Println(rowSlice)
-	logger.ErrorLogger.Println(len(rowSlice))
-	logger.ErrorLogger.Println(rowSlice[0])
-	logger.ErrorLogger.Println(rowSlice[0].count)
-	//var id uint64
-	// err := Scan(&rows)
-	// if err != nil {
-	// 	return err
-	// }
+	err = tx.Commit(ctx)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *DataRepository) IsRequestReal(idRequest string) error {
+	query := `select count(*) from requests where ИдЗаявки like $1`
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	type Row struct {
+		count int
+	}
+
+	var rows pgx.Rows
+
+	rows, err = tx.Query(ctx, query, idRequest)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+	defer rows.Close()
+
+	var rowSlice []Row
+	for rows.Next() {
+		var r Row
+		err := rows.Scan(&r.count)
+		if err != nil {
+			return err
+		}
+		rowSlice = append(rowSlice, r)
+	}
+
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	if rowSlice[0].count == 0 {
+		err := errors.New("нет заявки")
+		logger.ErrorLogger.Println("нет заявки")
+		return err
+	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
@@ -350,6 +409,8 @@ func (r *DataRepository) QueryInsertParts(data model.Parts) error {
 
 		var iter []interface{}
 
+		dt := time.Now()
+
 		iter = append(
 			iter,
 			data.DataPart.ИдЗаказНаряда,
@@ -362,6 +423,7 @@ func (r *DataRepository) QueryInsertParts(data model.Parts) error {
 			k.ЕдИзм,
 			k.Стоимость,
 			k.НДС,
+			dt.Format("2006-01-02T15:04:05"),
 		)
 
 		parts = append(parts, iter)
@@ -389,6 +451,7 @@ func (r *DataRepository) QueryInsertParts(data model.Parts) error {
 		"ЕдИзм",
 		"Стоимость",
 		"НДС",
+		"ДатаВремяОбновления",
 	}
 
 	_, err = tx.CopyFrom(ctx, pgx.Identifier{"parts"}, tableParts, pgx.CopyFromRows(parts))
@@ -419,6 +482,8 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 
 		var iter []interface{}
 
+		dt := time.Now()
+
 		iter = append(
 			iter,
 			data.DataWork.ИдЗаказНаряда,
@@ -428,6 +493,7 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 			k.КодОперации,
 			k.НормативнаяТрудоёмкость,
 			k.СтоимостьНЧ,
+			dt.Format("2006-01-02T15:04:05"),
 		)
 
 		works = append(works, iter)
@@ -452,6 +518,7 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 		"КодОперации",
 		"НормативнаяТрудоёмкость",
 		"СтоимостьНЧ",
+		"ДатаВремяОбновления",
 	}
 
 	_, err = tx.CopyFrom(ctx, pgx.Identifier{"works"}, tableWorks, pgx.CopyFromRows(works))

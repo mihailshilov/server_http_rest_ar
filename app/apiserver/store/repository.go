@@ -31,4 +31,5 @@ type DataRepository interface {
 	QueryInsertInforms(model.Informs) error
 	QueryInsertCarsForSite(model.CarsForSite) error
 	IsOrderReal(idOrder string) error
+	IsRequestReal(idOrder string) error
 }
