@@ -8,7 +8,7 @@ type Requests struct {
 type DataRequest struct {
 	ИдЗаявки        string `json:"id_request" validate:"required"`
 	ДатаВремяЗаявки string `json:"date_time_req" validate:"required,yyyy-mm-ddThh:mm:ss"`
-	ДатаВремяЗаписи string `json:"date_time_reс,omitempty"`
+	ДатаВремяЗаписи string `json:"date_time_rec,omitempty"`
 	Ответственный   string `json:"responsible" validate:"required"`
 	ИдОрганизации   string `json:"id_org" validate:"required,number"`
 	ИдПодразделения string `json:"id_dep" validate:"required,number"`
@@ -98,10 +98,10 @@ type OrderParts []struct {
 	Наименование    string `json:"name" validate:"required"`
 	КаталожныйНомер string `json:"code_catalog" validate:"required"`
 	ЧертежныйНомер  string `json:"code_drawing" validate:"required"`
-	Количество      string `json:"number" validate:"required"`
+	Количество      string `json:"number" validate:"required,number"`
 	ЕдИзм           string `json:"units" validate:"required"`
-	Стоимость       string `json:"price" validate:"required"`
-	НДС             string `json:"vat" validate:"required"`
+	Стоимость       string `json:"price" validate:"required,numeric"`
+	НДС             string `json:"vat" validate:"required,numeric"`
 }
 
 //работы

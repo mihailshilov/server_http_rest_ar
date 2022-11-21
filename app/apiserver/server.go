@@ -88,6 +88,8 @@ func msgForTag(fe validator.FieldError) string {
 		return "Поле должно быть целым числом"
 	case "min":
 		return "Нельзя передавать пустой масив"
+	case "numeric":
+		return "Поле должно быть вещественным числом"
 	case "yyyy-mm-ddThh:mm:ss":
 		return "Время указано не верно"
 	}
@@ -209,6 +211,8 @@ func (s *server) handleAuth() http.HandlerFunc {
 func (s *server) middleWare(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		w.Header().Add("Content-Type", "application/json")
+
 		//extract user_id
 		user_id, err := s.store.User().ExtractTokenMetadata(r, s.config)
 		if err != nil {
@@ -223,7 +227,7 @@ func (s *server) middleWare(next http.Handler) http.Handler {
 			return
 		}
 
-		w.Header().Add("Content-Type", "application/json")
+		
 
 		next.ServeHTTP(w, r)
 
