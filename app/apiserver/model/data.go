@@ -20,7 +20,7 @@ type Informs struct {
 }
 
 type DataInform struct {
-	ТипДокумента      string `json:"type_doc" validate:"required"`
+	ТипДокумента      string `json:"type_doc" validate:"required,oneof=Заявка Заказ-наряд"`
 	ИдДокумента       string `json:"id_doc" validate:"required"`
 	ИдОрганизации     string `json:"id_org" validate:"required,number"`
 	ИдПодразделения   string `json:"id_dep" validate:"required,number"`
@@ -40,7 +40,7 @@ type DataOrder struct {
 	ДатаВремяСоздания     string `json:"date_time_create" validate:"required,yyyy-mm-ddThh:mm:ss"`
 	ДатаВремяОткрытия     string `json:"date_time_open" validate:"required,yyyy-mm-ddThh:mm:ss"`
 	ВидОбращения          string `json:"order_type" validate:"required"`
-	ПовторныйРемонт       string `json:"re_repair" validate:"required"`
+	ПовторныйРемонт       string `json:"re_repair" validate:"required,oneof=Да Нет"`
 	ПричинаОбращения      string `json:"reason" validate:"required"` //reason
 	VINбазовый            string `json:"vin0" validate:"required"`
 	VINпослеДоработки     string `json:"vin1"`
@@ -119,8 +119,8 @@ type DataWork struct {
 type OrderWorks []struct {
 	Наименование            string `json:"name" validate:"required"`
 	КодОперации             string `json:"code"`
-	НормативнаяТрудоёмкость string `json:"complexity" validate:"required"`
-	СтоимостьНЧ             string `json:"price_hour" validate:"required"`
+	НормативнаяТрудоёмкость string `json:"complexity" validate:"required,numeric"`
+	СтоимостьНЧ             string `json:"price_hour" validate:"required,numeric"`
 }
 
 //Машины для сайта
@@ -130,38 +130,11 @@ type CarsForSite struct {
 
 type DataCarForSite struct {
 	Id_org string `json:"id_org" validate:"required,number"`
-	Cars   `json:"cars"`
+	Cars   `json:"cars" validate:"required,min=1,dive,required"`
 }
 
 type Cars []struct {
-	Vin    string `json:"vin"`
-	Id_isk string `json:"id_isk"`
-	Flag   string `json:"flag"`
+	Vin    string `json:"vin" validate:"required"`
+	Id_isk string `json:"id_isk" validate:"required"`
+	Flag   string `json:"flag" validate:"required,oneof=0 1"`
 }
-
-//заказ наряд создание
-// type DataOrder []struct {
-// 	ИдЗаказНаряд                 string `json:"id_order" validate:"required"`
-// 	ВремяФомрированияЗаказНаряда string `json:"date_time_order" validate:"required,yyyy-mm-ddThh:mm:ss"`
-// 	ВидОбращения                 string `json:"type" validate:"required"`
-// 	ПовторныйРемонт              bool   `json:"repeated" validate:"required"`
-// 	ПричинаОбращения             string `json:"reason" validate:"required"`
-// 	ЗаявкаИлиРасширение          string `json:"sign" validate:"required"`
-// 	Works                        `json:"works" validate:"required,dive,required"`
-// 	Parts                        `json:"parts" validate:"required,dive,required"`
-// }
-
-// type Works []struct {
-// 	НаименованиеРабот       string `json:"work_name" validate:"required"`
-// 	НормативнаяТрудоёмкость int    `json:"normativ" validate:"required"`
-// 	СтоимостьНормоЧаса      int    `json:"price_hour" validate:"required"`
-// }
-
-// type Parts []struct {
-// 	НаименованияЗапаснойЧасти string  `json:"repairs" validate:"required"`
-// 	КаталожныйНомер           string  `json:"number" validate:"required"`
-// 	Количество                int     `json:"qua" validate:"required"`
-// 	ЕдИзмерения               string  `json:"unit" validate:"required"`
-// 	Стоимость                 float32 `json:"price_repairs" validate:"required"`
-// 	Поставщик                 string  `json:"provider" validate:"required"`
-// }

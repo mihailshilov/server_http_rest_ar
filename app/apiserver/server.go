@@ -90,6 +90,8 @@ func msgForTag(fe validator.FieldError) string {
 		return "Нельзя передавать пустой масив"
 	case "numeric":
 		return "Поле должно быть вещественным числом"
+	case "oneof":
+		return "Допустимо только значение из списка для этого поля"
 	case "yyyy-mm-ddThh:mm:ss":
 		return "Время указано не верно"
 	}
@@ -325,27 +327,6 @@ func (s *server) handleInforms() http.HandlerFunc {
 
 		logger.InfoLogger.Println("good request )")
 
-		//Проверка наличия заказ-наряда
-		if req.DataInform.ТипДокумента == "Заказ-наряд" {
-			if err := s.store.Data().IsOrderReal(req.DataInform.ИдДокумента); err != nil {
-				logger.ErrorLogger.Println(err)
-				out_order := make([]ApiError, 1)
-				out_order[0] = ApiError{"order_id", "Заказ-наряд не найден"}
-
-				s.respond(w, r, http.StatusBadRequest, out_order)
-				return
-			}
-		} else {
-			if err := s.store.Data().IsRequestReal(req.DataInform.ИдДокумента); err != nil {
-				logger.ErrorLogger.Println(err)
-				out_order := make([]ApiError, 1)
-				out_order[0] = ApiError{"order_id", "Заявка не найдена"}
-
-				s.respond(w, r, http.StatusBadRequest, out_order)
-				return
-			}
-		}
-
 		//Валидация
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
 
@@ -373,6 +354,27 @@ func (s *server) handleInforms() http.HandlerFunc {
 			s.respond(w, r, http.StatusBadRequest, out)
 
 			return
+		}
+
+		//Проверка наличия заказ-наряда
+		if req.DataInform.ТипДокумента == "Заказ-наряд" {
+			if err := s.store.Data().IsOrderReal(req.DataInform.ИдДокумента); err != nil {
+				logger.ErrorLogger.Println(err)
+				out_order := make([]ApiError, 1)
+				out_order[0] = ApiError{"id_doc", "Заказ-наряд не найден"}
+
+				s.respond(w, r, http.StatusBadRequest, out_order)
+				return
+			}
+		} else {
+			if err := s.store.Data().IsRequestReal(req.DataInform.ИдДокумента); err != nil {
+				logger.ErrorLogger.Println(err)
+				out_order := make([]ApiError, 1)
+				out_order[0] = ApiError{"id_doc", "Заявка не найдена"}
+
+				s.respond(w, r, http.StatusBadRequest, out_order)
+				return
+			}
 		}
 
 		if err := s.store.Data().QueryInsertInforms(req); err != nil {
@@ -540,7 +542,7 @@ func (s *server) handleStatuses() http.HandlerFunc {
 		if err := s.store.Data().IsOrderReal(req.DataStatus.ИдЗаказНаряда); err != nil {
 			logger.ErrorLogger.Println(err)
 			out_order := make([]ApiError, 1)
-			out_order[0] = ApiError{"order_id", "Заказ-наряд не найден"}
+			out_order[0] = ApiError{"id_order", "Заказ-наряд не найден"}
 
 			s.respond(w, r, http.StatusBadRequest, out_order)
 			return
@@ -615,7 +617,7 @@ func (s *server) handleParts() http.HandlerFunc {
 		if err := s.store.Data().IsOrderReal(req.DataPart.ИдЗаказНаряда); err != nil {
 			logger.ErrorLogger.Println(err)
 			out_order := make([]ApiError, 1)
-			out_order[0] = ApiError{"order_id", "Заказ-наряд не найден"}
+			out_order[0] = ApiError{"id_order", "Заказ-наряд не найден"}
 
 			s.respond(w, r, http.StatusBadRequest, out_order)
 			return
@@ -690,7 +692,7 @@ func (s *server) handleWorks() http.HandlerFunc {
 		if err := s.store.Data().IsOrderReal(req.DataWork.ИдЗаказНаряда); err != nil {
 			logger.ErrorLogger.Println(err)
 			out_order := make([]ApiError, 1)
-			out_order[0] = ApiError{"order_id", "Заказ-наряд не найден"}
+			out_order[0] = ApiError{"id_order", "Заказ-наряд не найден"}
 
 			s.respond(w, r, http.StatusBadRequest, out_order)
 			return
