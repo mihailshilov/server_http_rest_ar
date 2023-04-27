@@ -2,9 +2,12 @@ package sqlstore
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"reflect"
 	_ "reflect"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v4"
@@ -101,7 +104,7 @@ func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 //orders
 func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 
-	query := `insert into orders ("ИдЗаказНаряда", "ИдЗаявки", "ИдСводногоЗаказНаряда", "ДатаВремяСоздания", "ДатаВремяОткрытия", "ВидОбращения", "ПовторныйРемонт", "ПричинаОбращения", "VINбазовый", "VINпослеДоработки", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ГосНомерТС", "ПробегТС", "ДатаВремяОбновления") values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`
+	query := `insert into orders ("ИдЗаказНаряда", "ИдЗаявки", "ИдСводногоЗаказНаряда", "ДатаВремяСоздания", "ДатаВремяОткрытия", "ВидОбращения", "ПовторныйРемонт", "ПричинаОбращения", "VINбазовый", "VINТекущий", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ГосНомерТС", "ПробегТС", "ДатаВремяОбновления") values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -111,6 +114,8 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 		logger.ErrorLogger.Println(err)
 		return err
 	}
+
+	reason := strings.Replace(data.DataOrder.ПричинаОбращения, "\n", ", ", -1)
 
 	dt := time.Now()
 
@@ -122,9 +127,9 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 		data.DataOrder.ДатаВремяОткрытия,
 		data.DataOrder.ВидОбращения,
 		data.DataOrder.ПовторныйРемонт,
-		data.DataOrder.ПричинаОбращения,
+		reason,
 		data.DataOrder.VINбазовый,
-		data.DataOrder.VINпослеДоработки,
+		data.DataOrder.VINТекущий,
 		data.DataOrder.Ответственный,
 		data.DataOrder.ИдОрганизации,
 		data.DataOrder.ИдПодразделения,
@@ -484,6 +489,13 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 
 		dt := time.Now()
 
+		// str := "500"
+		number, err := strconv.Atoi(k.КоличествоОпераций)
+		if err != nil {
+			logger.ErrorLogger.Println(err)
+			return err
+		}
+
 		iter = append(
 			iter,
 			data.DataWork.ИдЗаказНаряда,
@@ -494,6 +506,7 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 			k.НормативнаяТрудоёмкость,
 			k.СтоимостьНЧ,
 			dt.Format("2006-01-02T15:04:05"),
+			number,
 		)
 
 		works = append(works, iter)
@@ -519,6 +532,7 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 		"НормативнаяТрудоёмкость",
 		"СтоимостьНЧ",
 		"ДатаВремяОбновления",
+		"КоличествоОпераций",
 	}
 
 	_, err = tx.CopyFrom(ctx, pgx.Identifier{"works"}, tableWorks, pgx.CopyFromRows(works))
@@ -549,12 +563,15 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 
 		var iter []interface{}
 
+		dt := time.Now()
+
 		iter = append(
 			iter,
 			data.DataCarForSite.Id_org,
 			k.Vin,
 			k.Id_isk,
 			k.Flag,
+			dt.Format("2006-01-02T15:04:05"),
 		)
 
 		carsforsite = append(carsforsite, iter)
@@ -579,6 +596,7 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 		"vin",
 		"id_isk",
 		"flag",
+		"date_rec",
 	}
 
 	_, err = tx.CopyFrom(ctx, pgx.Identifier{"carsforsite"}, tableCarsForSite, pgx.CopyFromRows(carsforsite))
@@ -597,6 +615,125 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 
 }
 
+//query insert mssql
+
+func (r *DataRepository) QueryInsertMssql(data model.CarsForSite) ([]model.ISKStatus, error) {
+
+	//var carsforsite [][]interface{}
+
+	carsforsiteValSlice := reflect.ValueOf(data.DataCarForSite).FieldByName("Cars").Interface().(model.Cars)
+
+	//var response *model.ResponseCarsForSite
+
+	var mssql_respond string
+	var mssql_mess string
+	var mssql_errors []string
+	mssql_responds := []model.ISKStatus{}
+
+	for _, k := range carsforsiteValSlice {
+
+		//var iter []interface{}
+		iter := &model.ISKStatus{}
+
+		//request mssql
+
+		_, err := r.store.dbMssql.Exec(r.store.config.Spec.Queryies.Booking,
+			sql.Named("VIN", k.Vin),
+			sql.Named("НомернойТовар", k.Id_isk),
+			sql.Named("Значение", k.Flag),
+			sql.Named("Результат", sql.Out{Dest: &mssql_respond}),
+			sql.Named("Сообщение", sql.Out{Dest: &mssql_mess}),
+		)
+		if err != nil {
+			//return "", err
+			logger.ErrorLogger.Println(err)
+			err_mes := "ошибка в" + k.Id_isk
+			mssql_errors = append(mssql_errors, err_mes)
+			logger.ErrorLogger.Println(mssql_respond)
+			return nil, err
+		}
+
+		iter = &model.ISKStatus{
+			Vin:    k.Vin,
+			Id_isk: k.Id_isk,
+			Flag:   k.Flag,
+			MsResp: mssql_respond,
+			MsMess: mssql_mess,
+		}
+
+		mssql_responds = append(mssql_responds, *iter)
+
+		logger.InfoLogger.Println(mssql_respond)
+		logger.InfoLogger.Println(mssql_mess)
+
+		//response = append(response, )
+
+		//return mssql_respond, nil
+	}
+
+	return mssql_responds, nil
+
+}
+
+func (r *DataRepository) QueryUpdateCarsForSite(data []model.ISKStatus) error {
+	return nil
+}
+
+//request Azgaz catalog
+/*
+func (r *DataRepository) RequestAzgaz(data []model.DataAzgaz, config *model.Service) (*model.ResponseAzgaz, error) {
+
+	for _, car := range data {
+		if car.MsResp == "0" {
+			logger.InfoLogger.Println(car.Vin)
+		}
+	}
+*/
+
+//var dataset model.DataAzgaz
+//var response *model.ResponseAzgaz
+
+// bodyJson := &model.DataAzgazReq{
+// 	Visible: data.Visible,
+// }
+
+// dataset.Data = append(dataset.Data, bodyJson)
+
+// bodyBytesReq, err := json.Marshal(dataset)
+// if err != nil {
+// 	return nil, err
+// }
+
+// resp, err := http.Put(config.Spec.Client.UrlAzgazTest+data.Vin, "application/json", bytes.NewBuffer(bodyBytesReq))
+// if err != nil {
+// 	logger.ErrorLogger.Println(err)
+// 	return nil, err
+// }
+
+// defer resp.Body.Close()
+
+// bodyBytesResp, err := ioutil.ReadAll(resp.Body)
+// if err != nil {
+// 	logger.ErrorLogger.Println(err)
+// 	return nil, err
+// }
+
+// if err := json.Unmarshal(bodyBytesResp, &response); err != nil {
+// 	logger.ErrorLogger.Println(err)
+// 	return nil, err
+// }
+
+//return nil, nil
+
+//}
+
+//Logistic
+// func (r *DataRepository) QueryInsertMssql(jsonLogistic json) error {
+
+// }
+
+/*archive*/
+
 // func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 
 // 	var orders [][]interface{}
@@ -608,7 +745,7 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 // 			iter,
 // 			data.ListOrders.ИдЗаявки,
 // 			data.ListOrders.VINбазовый,
-// 			data.ListOrders.VINпослеДоработки,
+// 			data.ListOrders.VINТекущий,
 // 			k.ИдЗаказНаряд,
 // 			k.ВремяФомрированияЗаказНаряда,
 // 			k.ВидОбращения,
@@ -628,7 +765,7 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 // 				iter,
 // 				data.ListOrders.ИдЗаявки,
 // 				data.ListOrders.VINбазовый,
-// 				data.ListOrders.VINпослеДоработки,
+// 				data.ListOrders.VINТекущий,
 // 				k.ИдЗаказНаряд,
 // 				l.НаименованияЗапаснойЧасти,
 // 				l.КаталожныйНомер,
@@ -650,7 +787,7 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 // 				iter,
 // 				data.ListOrders.ИдЗаявки,
 // 				data.ListOrders.VINбазовый,
-// 				data.ListOrders.VINпослеДоработки,
+// 				data.ListOrders.VINТекущий,
 // 				k.ИдЗаказНаряд,
 // 				l.НаименованиеРабот,
 // 				l.НормативнаяТрудоёмкость,
@@ -673,7 +810,7 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 // 	tableOrders := []string{
 // 		"ИдЗаявки",
 // 		"vinбазовый",
-// 		"vinпослеДоработки",
+// 		"VINТекущий",
 // 		"ИдЗаказНаряд",
 // 		"ВремяФомрированияЗаказНаряда",
 // 		"ВидОбращения",
@@ -692,7 +829,7 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 // 	tableParts := []string{
 // 		"ИдЗаявки",
 // 		"vinбазовый",
-// 		"vinпослеДоработки",
+// 		"VINТекущий",
 // 		"ИдЗаказНаряд",
 // 		"НаименованияЗапаснойЧасти",
 // 		"КаталожныйНомер",
@@ -712,7 +849,7 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 // 	tableWorks := []string{
 // 		"ИдЗаявки",
 // 		"vinбазовый",
-// 		"vinпослеДоработки",
+// 		"VINТекущий",
 // 		"ИдЗаказНаряд",
 // 		"НаименованиеРабот",
 // 		"НормативнаяТрудоёмкость",

@@ -42,8 +42,8 @@ type DataOrder struct {
 	ВидОбращения          string `json:"order_type" validate:"required"`
 	ПовторныйРемонт       string `json:"re_repair" validate:"required,oneof=Да Нет"`
 	ПричинаОбращения      string `json:"reason" validate:"required"` //reason
-	VINбазовый            string `json:"vin0" validate:"required"`
-	VINпослеДоработки     string `json:"vin1"`
+	VINбазовый            string `json:"vin0"`
+	VINТекущий            string `json:"vin1"`
 	Ответственный         string `json:"responsible" validate:"required"`
 	ИдОрганизации         string `json:"id_org" validate:"required,number"`
 	ИдПодразделения       string `json:"id_dep" validate:"required,number"`
@@ -98,7 +98,7 @@ type OrderParts []struct {
 	Наименование    string `json:"name" validate:"required"`
 	КаталожныйНомер string `json:"code_catalog" validate:"required"`
 	ЧертежныйНомер  string `json:"code_drawing" validate:"required"`
-	Количество      string `json:"number" validate:"required,number"`
+	Количество      string `json:"number" validate:"required,numeric"`
 	ЕдИзм           string `json:"units" validate:"required"`
 	Стоимость       string `json:"price" validate:"required,numeric"`
 	НДС             string `json:"vat" validate:"required,numeric"`
@@ -120,6 +120,7 @@ type OrderWorks []struct {
 	Наименование            string `json:"name" validate:"required"`
 	КодОперации             string `json:"code"`
 	НормативнаяТрудоёмкость string `json:"complexity" validate:"required,numeric"`
+	КоличествоОпераций      string `json:"number" validate:"required,number"`
 	СтоимостьНЧ             string `json:"price_hour" validate:"required,numeric"`
 }
 
@@ -137,4 +138,44 @@ type Cars []struct {
 	Vin    string `json:"vin" validate:"required"`
 	Id_isk string `json:"id_isk" validate:"required"`
 	Flag   string `json:"flag" validate:"required,oneof=0 1"`
+}
+
+//Data booking
+type DataBooking struct {
+	Vin      string
+	Id_isk   string
+	Значение string
+}
+
+//resp struct api gaz crm
+type ResponseCarsForSite struct {
+	StatusMs   StatusMs   `json:"StatusISK"`
+	StatusSite StatusSite `json:"StatusSite"`
+}
+
+type StatusMs []struct {
+	Vin    string `json:"vin"`
+	Status string `json:"status"`
+}
+
+type StatusSite []struct {
+	Vin    string `json:"vin"`
+	Status string `json:"status"`
+}
+
+// type ISKStatus struct {
+// 	ISKStatuses
+// }
+
+type ISKStatus struct {
+	Vin    string
+	Id_isk string
+	Flag   string
+	MsResp string
+	MsMess string
+}
+
+//resp struct api gaz crm
+type ResponseAzgaz struct {
+	Visible bool `json:"visible"`
 }

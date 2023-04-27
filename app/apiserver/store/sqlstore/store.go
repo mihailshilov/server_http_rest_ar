@@ -1,24 +1,28 @@
 package sqlstore
 
 import (
+	"database/sql"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/store"
+	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
 )
 
-//Stores
+//Stores//
 type Store struct {
 	dbPostgres *pgxpool.Pool
-	// dbMssql        *sql.DB
+	dbMssql        *sql.DB
+	config         *model.Service
 	userRepository *UserRepository
 	dataRepository *DataRepository
 }
 
 //New_db
-//func New(db *pgxpool.Pool, dbmssql *sql.DB) *Store {
-func New(db *pgxpool.Pool) *Store {
+func New(db *pgxpool.Pool, dbmssql *sql.DB, config *model.Service) *Store {
+//func New(db *pgxpool.Pool) *Store {
 	return &Store{
 		dbPostgres: db,
-		// dbMssql:    dbmssql,
+		dbMssql:    dbmssql,
+		config:     config,
 	}
 }
 

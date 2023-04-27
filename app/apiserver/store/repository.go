@@ -30,6 +30,10 @@ type DataRepository interface {
 	QueryInsertWorks(model.Works) error
 	QueryInsertInforms(model.Informs) error
 	QueryInsertCarsForSite(model.CarsForSite) error
+	//QueryUpdateCarsForSite([]model.ISKStatus) error
+	QueryInsertMssql(model.CarsForSite) ([]model.ISKStatus, error)
 	IsOrderReal(idOrder string) error
 	IsRequestReal(idOrder string) error
+	//RequestAzgaz(data []model.DataAzgaz, config *model.Service) (*model.ResponseAzgaz, error)
+	//QueryInsertLogistic(jsonLogistic) error
 }
