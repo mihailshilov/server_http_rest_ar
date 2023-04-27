@@ -20,6 +20,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
+	stats_api "github.com/fukata/golang-stats-api-handler"
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
 
@@ -46,7 +47,7 @@ var (
 	errReg                      = errors.New("service registration error")
 	errJwt                      = errors.New("token error")
 	errFindUser                 = errors.New("user not found")
-	//errMssql                    = errors.New("mssql error")
+	errMssql                    = errors.New("mssql error")
 )
 
 //server configure
@@ -119,6 +120,18 @@ func newResponse(status string, response string) *model.Response {
 	}
 }
 
+//write response struct carsforsite
+/*
+func newResponseBooking(statusms string, responsems string, statussite string, responsesite string) *model.ResponseCarsForSite {
+	return &model.ResponseCarsForSite{
+		StatusMs:     statusms,
+		ResponseMs:   responsems,
+		StatusSite:   statussite,
+		ResponseSite: responsesite,
+	}
+}
+*/
+
 //write http error
 func (s *server) error(w http.ResponseWriter, r *http.Request, code int, err error) {
 	s.respond(w, r, code, map[string]string{"error": err.Error()})
@@ -164,6 +177,7 @@ func (s *server) configureRouter() {
 	auth.HandleFunc("/serviceworks", s.handleWorks()).Methods("POST")
 	auth.HandleFunc("/serviceinform", s.handleInforms()).Methods("POST")
 	auth.HandleFunc("/carsforsite", s.handleCarsForSite()).Methods("POST")
+	auth.HandleFunc("/stats", stats_api.Handler).Methods("GET")
 
 }
 
@@ -223,13 +237,13 @@ func (s *server) middleWare(next http.Handler) http.Handler {
 			return
 		}
 
+		//add user_id to context
+
 		if err := s.store.User().FindUserid(user_id.UserId); err != nil {
 			s.error(w, r, http.StatusUnauthorized, errFindUser)
 			logger.ErrorLogger.Println(err)
 			return
 		}
-
-		
 
 		next.ServeHTTP(w, r)
 
@@ -489,6 +503,7 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
+			logger.ErrorLogger.Printf(" Заказ-наряд № " + req.DataOrder.ИдЗаказНаряда)
 
 			errs := err.(validator.ValidationErrors)
 
@@ -509,6 +524,7 @@ func (s *server) handleOrders() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
+		logger.InfoLogger.Println("good request - Заказ-наряд добавлен")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 	}
 
@@ -686,7 +702,6 @@ func (s *server) handleWorks() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-		logger.InfoLogger.Println("good request )")
 
 		//Проверка наличия заказ-наряда
 		if err := s.store.Data().IsOrderReal(req.DataWork.ИдЗаказНаряда); err != nil {
@@ -732,6 +747,7 @@ func (s *server) handleWorks() http.HandlerFunc {
 			return
 		}
 
+		logger.InfoLogger.Println("good request - работы переданы")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -794,9 +810,86 @@ func (s *server) handleCarsForSite() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
+
+		// QueryInsertCarsForSiteToIsk (построчно)
+
+		/*
+					хп_УстановитьВидимостьАвтомобиляДляСайта @VIN = vin, @НомернойТовар = id_isk, @Значение = flag, @Сообщение varchar(900) out, @Результат int out
+			Любой @Результат != 0 это ошибка, комментарий в переменной @Сообщение
+			@Результат = 0, @Сообщение = 'Успешно'
+
+		*/
+
+		resp_isk, err := s.store.Data().QueryInsertMssql(req)
+		if err != nil {
+			s.error(w, r, http.StatusBadRequest, errMssql)
+			logger.ErrorLogger.Println(err)
+
+			s.respond(w, r, http.StatusBadRequest, err)
+
+			return
+		}
+		logger.ErrorLogger.Println(resp_isk)
+
+		// вернуть ответы по каждой строке и
+		// записать ответы в бд (date_rec_isk & status_rec_isk) 6-12
+		////
+		/*
+			if err := s.store.Data().QueryUpdateCarsForSite(resp_isk); err != nil {
+				logger.ErrorLogger.Println(err)
+				return
+			}
+		*/
+		// при успешном ответе по каждой строке дернуть азгаз
+		// записать ответ в бд
+
+		//request gazcrm api
+
+		//resp_isk //тут будет цикл
+
+		/*
+
+			resAzgaz, err := s.store.Data().RequestAzgaz(resp_isk, s.config)
+			if err != nil {
+				logger.ErrorLogger.Println(err)
+			}
+
+
+		*/
+		// if resAzgaz.Visible {
+		// 	logger.ErrorLogger.Println(resAzgaz)
+		// 	s.respond(w, r, http.StatusBadRequest, newResponse("Error", resAzgaz.Visible))
+		// } else {
+		// 	logger.InfoLogger.Println("gazcrm form data transfer success")
+		// 	s.respond(w, r, http.StatusOK, newResponse("Ok", resAzgaz.Visible))
+		// }
+
 		logger.InfoLogger.Println("good request )")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
 
 }
+
+/*
+// handleCarsForSite godoc
+// @Summary Добавить статус
+// @Tags Отправка данных
+// @Description Добавить статус заказ-наряда
+// @ID create-status
+// @Accept  json
+// @Produce  json
+// @Param input body model.DataStatus true "status info"
+// @Success 200 {object} model.Response "OK"
+// @Router /auth/statuses/ [post]
+// @Security ApiKeyAuth
+func (s *server) handleLogistic() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		logger.InfoLogger.Println("good request )")
+		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+	}
+
+}
+*/

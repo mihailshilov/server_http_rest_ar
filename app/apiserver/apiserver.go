@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"database/sql"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
@@ -29,16 +30,16 @@ func Start(config *model.Service) error {
 
 	defer dbPostgres.Close()
 
-	// dbMssql, err := newDbMssql(config.Spec.DBms.Url)
-	// if err != nil {
-	// 	logger.ErrorLogger.Println(err)
-	// 	return err
-	// }
+	dbMssql, err := newDbMssql(config.Spec.DBms.Url)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
 
-	// defer dbMssql.Close()
+	defer dbMssql.Close()
 
-	// store_db := sqlstore.New(dbPostgres, dbMssql)
-	store_db := sqlstore.New(dbPostgres)
+	store_db := sqlstore.New(dbPostgres, dbMssql, config)
+	//store_db := sqlstore.New(dbPostgres)
 
 	//cert, key files
 	fcert, err := filepath.Abs(config.Spec.Ports.Crt)
@@ -129,22 +130,22 @@ func newDbPostgres(conf *model.Service) (*pgxpool.Pool, error) {
 }
 
 //connect to mssql
-// func newDbMssql(databaseUrl string) (*sql.DB, error) {
+func newDbMssql(databaseUrl string) (*sql.DB, error) {
 
-// 	db, err := sql.Open("sqlserver", databaseUrl)
-// 	if err != nil {
-// 		logger.ErrorLogger.Println(err)
-// 		return nil, err
+	db, err := sql.Open("sqlserver", databaseUrl)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return nil, err
 
-// 	}
+	}
 
-// 	if err := db.Ping(); err != nil {
-// 		logger.ErrorLogger.Println(err)
-// 		return nil, err
-// 	}
+	if err := db.Ping(); err != nil {
+		logger.ErrorLogger.Println(err)
+		return nil, err
+	}
 
-// 	return db, nil
+	return db, nil
 
-// }
+}
 
 //12

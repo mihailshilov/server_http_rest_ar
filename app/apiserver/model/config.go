@@ -14,8 +14,8 @@ type Service struct {
 		Ports struct {
 			Name string `yaml:"name"`
 			Addr string `yaml:"bind_addr"`
-			Crt string `yaml:"crt"`
-			Key string `yaml:"key"`
+			Crt  string `yaml:"crt"`
+			Key  string `yaml:"key"`
 		} `yaml:"ports"`
 		DBpg struct {
 			Name              string `yaml:"name"`
@@ -38,6 +38,14 @@ type Service struct {
 			TokenDecode string `yaml:"token"`
 			LifeTerm    int    `yaml:"term"`
 		} `yaml:"jwt"`
+		Client struct {
+			UrlAzgazTest      string `yaml:"url_azgaz_test"`
+			UrlMailingService string `yaml:"url_mailing_service"`
+		} `yaml:"client"`
+		Queryies struct {
+			Booking  string `yaml:"booking"`
+			Logistic string `yaml:"logistic"`
+		} `yaml:"queryies"`
 	} `yaml:"spec"`
 }
 
