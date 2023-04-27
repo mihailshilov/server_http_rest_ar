@@ -20,6 +20,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
+	stats_api "github.com/fukata/golang-stats-api-handler"
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
 
@@ -176,7 +177,7 @@ func (s *server) configureRouter() {
 	auth.HandleFunc("/serviceworks", s.handleWorks()).Methods("POST")
 	auth.HandleFunc("/serviceinform", s.handleInforms()).Methods("POST")
 	auth.HandleFunc("/carsforsite", s.handleCarsForSite()).Methods("POST")
-	auth.HandleFunc("/logistic", s.handleLogistic()).Methods("POST")
+	auth.HandleFunc("/stats", stats_api.Handler).Methods("GET")
 
 }
 
@@ -502,6 +503,7 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 		if err := s.validate.Struct(req); err != nil {
 			logger.ErrorLogger.Println(err)
+			logger.ErrorLogger.Printf(" Заказ-наряд № " + req.DataOrder.ИдЗаказНаряда)
 
 			errs := err.(validator.ValidationErrors)
 
@@ -522,6 +524,7 @@ func (s *server) handleOrders() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
+		logger.InfoLogger.Println("good request - Заказ-наряд добавлен")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 	}
 
@@ -888,3 +891,26 @@ func (s *server) handleLogistic() http.HandlerFunc {
 	}
 
 }
+
+/*
+// handleCarsForSite godoc
+// @Summary Добавить статус
+// @Tags Отправка данных
+// @Description Добавить статус заказ-наряда
+// @ID create-status
+// @Accept  json
+// @Produce  json
+// @Param input body model.DataStatus true "status info"
+// @Success 200 {object} model.Response "OK"
+// @Router /auth/statuses/ [post]
+// @Security ApiKeyAuth
+func (s *server) handleLogistic() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		logger.InfoLogger.Println("good request )")
+		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+	}
+
+}
+*/

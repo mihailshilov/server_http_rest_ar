@@ -6,10 +6,10 @@ import (
 	"errors"
 	"reflect"
 	_ "reflect"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/mihailshilov/server_http_rest_ar/app/apiserver/model"
 
@@ -24,7 +24,7 @@ type DataRepository struct {
 //requests
 func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 
-	query := `insert into requests ("ИдЗаявки", "ДатаВремяЗаявки", "ДатаВремяЗаписи", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОбновления") values($1, $2, $3, $4, $5, $6, $7)`
+	query := `insert into requests ("ИдЗаявки", "ДатаВремяЗаявки", "ДатаВремяЗаписи", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОбновления", "Uid_request") values($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -37,6 +37,15 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 
 	dt := time.Now()
 
+	var uid_req uuid.UUID
+	if data.DataRequest.Uid_request != "" {
+		uid_req, err = uuid.FromString(data.DataRequest.Uid_request)
+		if err != nil {
+			logger.ErrorLogger.Println("Неверный формат Guid req")
+			return err
+		}
+	}
+
 	_, err = tx.Exec(ctx, query,
 		data.DataRequest.ИдЗаявки,
 		data.DataRequest.ДатаВремяЗаявки,
@@ -45,6 +54,7 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 		data.DataRequest.ИдОрганизации,
 		data.DataRequest.ИдПодразделения,
 		dt.Format("2006-01-02T15:04:05"),
+		uid_req,
 	)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
@@ -64,7 +74,7 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 //informs
 func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 
-	query := `insert into informs ("ТипДокумента", "ИдДокумента", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОтправки", "ДатаВремяДоставки", "ДатаВремяОбновления") values($1, $2, $3, $4, $5, $6, $7)`
+	query := `insert into informs ("ТипДокумента", "ИдДокумента", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОтправки", "ДатаВремяДоставки", "ДатаВремяОбновления", "Uid_doc") values($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -77,6 +87,17 @@ func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 
 	dt := time.Now()
 
+	var uid_doc uuid.UUID
+	//var err error
+	if data.DataInform.Uid_doc != "" {
+		uid_doc, err = uuid.FromString(data.DataInform.Uid_doc)
+		if err != nil {
+			logger.ErrorLogger.Println("Неверный формат Guid документа")
+
+			return err
+		}
+	}
+
 	_, err = tx.Exec(ctx, query,
 		data.DataInform.ТипДокумента,
 		data.DataInform.ИдДокумента,
@@ -85,6 +106,7 @@ func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 		data.DataInform.ДатаВремяОтправки,
 		data.DataInform.ДатаВремяДоставки,
 		dt.Format("2006-01-02T15:04:05"),
+		uid_doc,
 	)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
@@ -104,7 +126,7 @@ func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 //orders
 func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 
-	query := `insert into orders ("ИдЗаказНаряда", "ИдЗаявки", "ИдСводногоЗаказНаряда", "ДатаВремяСоздания", "ДатаВремяОткрытия", "ВидОбращения", "ПовторныйРемонт", "ПричинаОбращения", "VINбазовый", "VINТекущий", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ГосНомерТС", "ПробегТС", "ДатаВремяОбновления") values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`
+	query := `insert into orders ("ИдЗаказНаряда", "ИдЗаявки", "ИдСводногоЗаказНаряда", "ДатаВремяСоздания", "ДатаВремяОткрытия", "ВидОбращения", "ПовторныйРемонт", "ПричинаОбращения", "VINбазовый", "VINТекущий", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ГосНомерТС", "ПробегТС", "ДатаВремяОбновления", "Uid_order", "Uid_request", "Uid_consorder") values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -115,9 +137,34 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 		return err
 	}
 
-	reason := strings.Replace(data.DataOrder.ПричинаОбращения, "\n", ", ", -1)
+	reason := strings.Replace(data.DataOrder.ПричинаОбращения, "\n", ". ", -1)
 
 	dt := time.Now()
+
+	var uid_ord, uid_req, uid_cons uuid.UUID
+	if data.DataOrder.Uid_order != "" {
+		uid_ord, err = uuid.FromString(data.DataOrder.Uid_order)
+		if err != nil {
+			logger.ErrorLogger.Println("Неверный формат Guid ord")
+			return err
+		}
+	}
+
+	if data.DataOrder.Uid_request != "" {
+		uid_req, err = uuid.FromString(data.DataOrder.Uid_request)
+		if err != nil {
+			logger.ErrorLogger.Println("Неверный формат Guid req")
+			return err
+		}
+	}
+
+	if data.DataOrder.Uid_consorder != "" {
+		uid_cons, err = uuid.FromString(data.DataOrder.Uid_consorder)
+		if err != nil {
+			logger.ErrorLogger.Println("Неверный формат Guid cons")
+			return err
+		}
+	}
 
 	_, err = tx.Exec(ctx, query,
 		data.DataOrder.ИдЗаказНаряда,
@@ -136,6 +183,9 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 		data.DataOrder.ГосНомерТС,
 		data.DataOrder.ПробегТС,
 		dt.Format("2006-01-02T15:04:05"),
+		uid_ord,
+		uid_req,
+		uid_cons,
 	)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
@@ -155,7 +205,7 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 //cons_orders
 func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 
-	query := `insert into cons_orders ("ИдСводногоЗаказНаряда", "ИдЗаявки", "ДатаВремяСоздания", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОбновления") values($1, $2, $3, $4, $5, $6, $7)`
+	query := `insert into cons_orders ("ИдСводногоЗаказНаряда", "ИдЗаявки", "ДатаВремяСоздания", "Ответственный", "ИдОрганизации", "ИдПодразделения", "ДатаВремяОбновления", "Uid_consorder", "Uid_request") values($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancelFunc()
@@ -168,6 +218,23 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 
 	dt := time.Now()
 
+	var uid_req, uid_cons uuid.UUID
+	if data.DataConsOrder.Uid_request != "" {
+		uid_req, err = uuid.FromString(data.DataConsOrder.Uid_request)
+		if err != nil {
+			logger.ErrorLogger.Println("Неверный формат Guid req")
+			return err
+		}
+	}
+
+	if data.DataConsOrder.Uid_consorder != "" {
+		uid_cons, err = uuid.FromString(data.DataConsOrder.Uid_consorder)
+		if err != nil {
+			logger.ErrorLogger.Println("Неверный формат Guid cons")
+			return err
+		}
+	}
+
 	_, err = tx.Exec(ctx, query,
 		data.DataConsOrder.ИдСводногоЗаказНаряда,
 		data.DataConsOrder.ИдЗаявки,
@@ -176,6 +243,8 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 		data.DataConsOrder.ИдОрганизации,
 		data.DataConsOrder.ИдПодразделения,
 		dt.Format("2006-01-02T15:04:05"),
+		uid_cons,
+		uid_req,
 	)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
@@ -242,6 +311,17 @@ func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 
 		dt := time.Now()
 
+		var uid_ord uuid.UUID
+		var err error
+		if data.DataStatus.Uid_order != "" {
+			uid_ord, err = uuid.FromString(data.DataStatus.Uid_order)
+			if err != nil {
+				logger.ErrorLogger.Println("Неверный формат Guid ord")
+
+				return err
+			}
+		}
+
 		iter = append(
 			iter,
 			data.DataStatus.ИдЗаказНаряда,
@@ -250,6 +330,7 @@ func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 			k.Статус,
 			k.ДатаВремя,
 			dt.Format("2006-01-02T15:04:05"),
+			uid_ord,
 		)
 
 		statuses = append(statuses, iter)
@@ -276,6 +357,7 @@ func (r *DataRepository) QueryInsertStatuses(data model.Statuses) error {
 		"Статус",
 		"ДатаВремя",
 		"ДатаВремяОбновления",
+		"Uid_order",
 	}
 
 	_, err = tx.CopyFrom(ctx, pgx.Identifier{"statuses"}, tableStatuses, pgx.CopyFromRows(statuses))
@@ -416,6 +498,17 @@ func (r *DataRepository) QueryInsertParts(data model.Parts) error {
 
 		dt := time.Now()
 
+		var uid_ord uuid.UUID
+		var err error
+		if data.DataPart.Uid_order != "" {
+			uid_ord, err = uuid.FromString(data.DataPart.Uid_order)
+			if err != nil {
+				logger.ErrorLogger.Println("Неверный формат Guid ord")
+
+				return err
+			}
+		}
+
 		iter = append(
 			iter,
 			data.DataPart.ИдЗаказНаряда,
@@ -429,6 +522,8 @@ func (r *DataRepository) QueryInsertParts(data model.Parts) error {
 			k.Стоимость,
 			k.НДС,
 			dt.Format("2006-01-02T15:04:05"),
+			uid_ord,
+			k.Скидка,
 		)
 
 		parts = append(parts, iter)
@@ -457,6 +552,8 @@ func (r *DataRepository) QueryInsertParts(data model.Parts) error {
 		"Стоимость",
 		"НДС",
 		"ДатаВремяОбновления",
+		"Uid_order",
+		"discount",
 	}
 
 	_, err = tx.CopyFrom(ctx, pgx.Identifier{"parts"}, tableParts, pgx.CopyFromRows(parts))
@@ -489,11 +586,15 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 
 		dt := time.Now()
 
-		// str := "500"
-		number, err := strconv.Atoi(k.КоличествоОпераций)
-		if err != nil {
-			logger.ErrorLogger.Println(err)
-			return err
+		var uid_ord uuid.UUID
+		var err error
+		if data.DataWork.Uid_order != "" {
+			uid_ord, err = uuid.FromString(data.DataWork.Uid_order)
+			if err != nil {
+				logger.ErrorLogger.Println("Неверный формат Guid ord")
+
+				return err
+			}
 		}
 
 		iter = append(
@@ -506,7 +607,11 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 			k.НормативнаяТрудоёмкость,
 			k.СтоимостьНЧ,
 			dt.Format("2006-01-02T15:04:05"),
-			number,
+			k.КоличествоОпераций,
+			uid_ord,
+			k.НДС,
+			k.Скидка,
+			k.ЕдИзм,
 		)
 
 		works = append(works, iter)
@@ -533,11 +638,16 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 		"СтоимостьНЧ",
 		"ДатаВремяОбновления",
 		"КоличествоОпераций",
+		"Uid_order",
+		"НДС",
+		"discount",
+		"ЕдИзм",
 	}
 
-	_, err = tx.CopyFrom(ctx, pgx.Identifier{"works"}, tableWorks, pgx.CopyFromRows(works))
+	xx, err := tx.CopyFrom(ctx, pgx.Identifier{"works"}, tableWorks, pgx.CopyFromRows(works))
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		logger.InfoLogger.Println(xx)
 		return err
 	}
 
@@ -572,6 +682,7 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 			k.Id_isk,
 			k.Flag,
 			dt.Format("2006-01-02T15:04:05"),
+			k.Vin_current,
 		)
 
 		carsforsite = append(carsforsite, iter)
@@ -597,6 +708,7 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 		"id_isk",
 		"flag",
 		"date_rec",
+		"vin_current",
 	}
 
 	_, err = tx.CopyFrom(ctx, pgx.Identifier{"carsforsite"}, tableCarsForSite, pgx.CopyFromRows(carsforsite))
