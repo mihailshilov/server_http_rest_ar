@@ -274,8 +274,6 @@ func (s *server) handleRequests() http.HandlerFunc {
 			return
 		}
 
-		logger.InfoLogger.Println("good request )")
-
 		//Валидация
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
 
@@ -305,11 +303,20 @@ func (s *server) handleRequests() http.HandlerFunc {
 			return
 		}
 
+		//проверка на дубли
+
+		if err := s.store.Data().IsRequestUnic(req); err != nil {
+			logger.ErrorLogger.Println("Заявка " + req.DataRequest.ИдЗаявки + " дублируется. Запись не внесена в БД, гуид: " + req.DataRequest.Uid_request)
+			s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+			return
+		}
+
 		if err := s.store.Data().QueryInsertRequests(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
+		logger.InfoLogger.Println("good request )")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}

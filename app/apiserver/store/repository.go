@@ -36,4 +36,5 @@ type DataRepository interface {
 	IsRequestReal(idOrder string) error
 	//RequestAzgaz(data []model.DataAzgaz, config *model.Service) (*model.ResponseAzgaz, error)
 	//QueryInsertLogistic(jsonLogistic) error
+	IsRequestUnic(model.Requests) error
 }

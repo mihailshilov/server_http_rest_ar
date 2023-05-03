@@ -71,6 +71,72 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 
 }
 
+func (r *DataRepository) IsRequestUnic(data model.Requests) error {
+	query := `select * from requests where "Uid_request" = $1 order  by id desc limit 1`
+
+	//db table
+	type request struct {
+		Id           int
+		IdRequest    string
+		DateTimeReq  string
+		DateTimeRec  string
+		Rresponsible string
+		IdOrg        string
+		IdDep        string
+		DateTimeUp   string
+		UidRequest   uuid.UUID
+	}
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	var rows pgx.Rows
+
+	var LastRecRow request
+
+	rows, err = tx.Query(ctx, query, data.DataRequest.Uid_request)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+
+		err := rows.Scan(&LastRecRow.Id, &LastRecRow.IdRequest, &LastRecRow.DateTimeReq, &LastRecRow.DateTimeRec, &LastRecRow.Rresponsible, &LastRecRow.IdOrg, &LastRecRow.IdDep, &LastRecRow.DateTimeUp, &LastRecRow.UidRequest)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	lastreqstring := LastRecRow.IdRequest + LastRecRow.DateTimeReq + LastRecRow.DateTimeRec + LastRecRow.Rresponsible + LastRecRow.IdOrg + LastRecRow.IdDep
+
+	//logger.InfoLogger.Println(lastreqstring)
+
+	newrecstring := data.DataRequest.ИдЗаявки + data.DataRequest.ДатаВремяЗаявки + data.DataRequest.ДатаВремяЗаписи + data.DataRequest.Ответственный + data.DataRequest.ИдОрганизации + data.DataRequest.ИдПодразделения
+
+	//logger.InfoLogger.Println(newrecstring)
+
+	if lastreqstring == newrecstring {
+
+		err := errors.New("заявка повторилась")
+
+		//logger.InfoLogger.Println(err)
+
+		return err
+	}
+
+	return nil
+
+}
+
 //informs
 func (r *DataRepository) QueryInsertInforms(data model.Informs) error {
 
