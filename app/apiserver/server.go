@@ -463,6 +463,14 @@ func (s *server) handleConsOrders() http.HandlerFunc {
 			return
 		}
 
+		//проверка на дубли
+
+		if err := s.store.Data().IsConsOrderUnic(req); err != nil {
+			logger.ErrorLogger.Println("Сводный З-Н " + req.DataConsOrder.ИдСводногоЗаказНаряда + " дублируется. Запись не внесена в БД, гуид: " + req.DataConsOrder.Uid_consorder)
+			s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+			return
+		}
+
 		if err := s.store.Data().QueryInsertConsOrders(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
@@ -524,6 +532,14 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 			s.respond(w, r, http.StatusBadRequest, out)
 
+			return
+		}
+
+		//проверка на дубли
+
+		if err := s.store.Data().IsOrderUnic(req); err != nil {
+			logger.ErrorLogger.Println("З-Н " + req.DataOrder.ИдЗаказНаряда + " дублируется. Запись не внесена в БД, гуид: " + req.DataOrder.Uid_order)
+			s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 			return
 		}
 

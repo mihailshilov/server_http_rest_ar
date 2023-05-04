@@ -37,4 +37,6 @@ type DataRepository interface {
 	//RequestAzgaz(data []model.DataAzgaz, config *model.Service) (*model.ResponseAzgaz, error)
 	//QueryInsertLogistic(jsonLogistic) error
 	IsRequestUnic(model.Requests) error
+	IsOrderUnic(model.Orders) error
+	IsConsOrderUnic(model.ConsOrders) error
 }

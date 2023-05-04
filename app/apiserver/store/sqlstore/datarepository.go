@@ -268,6 +268,78 @@ func (r *DataRepository) QueryInsertOrders(data model.Orders) error {
 
 }
 
+func (r *DataRepository) IsOrderUnic(data model.Orders) error {
+
+	query := `select * from orders where "Uid_order" = $1 order  by id desc limit 1`
+
+	type order struct {
+		Id           int
+		IdOrder      string
+		IdOrg        string
+		IdDep        string
+		IdConsOrder  string
+		IdRequest    string
+		DateTimeRec  string
+		DateTimeOpen string
+		OrderType    string
+		ReRepair     string
+		Reason       string
+		Vin0         string
+		Vin1         string
+		Rresponsible string
+		GNum         string
+		Mileage      string
+		DateTimeUp   string
+		UidOrder     uuid.UUID
+		UidRequest   uuid.UUID
+		UidConsOrder uuid.UUID
+	}
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	var rows pgx.Rows
+
+	var LastRecRow order
+
+	rows, err = tx.Query(ctx, query, data.DataOrder.Uid_order)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+
+		err := rows.Scan(&LastRecRow.Id, &LastRecRow.IdOrder, &LastRecRow.IdOrg, &LastRecRow.IdDep, &LastRecRow.IdConsOrder, &LastRecRow.IdRequest, &LastRecRow.DateTimeRec, &LastRecRow.DateTimeOpen, &LastRecRow.OrderType, &LastRecRow.ReRepair, &LastRecRow.Reason, &LastRecRow.Vin0, &LastRecRow.Vin1, &LastRecRow.Rresponsible, &LastRecRow.GNum, &LastRecRow.Mileage, &LastRecRow.DateTimeUp, &LastRecRow.UidOrder, &LastRecRow.UidRequest, &LastRecRow.UidConsOrder)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	lastorederstring := LastRecRow.IdOrder + LastRecRow.IdOrg + LastRecRow.IdDep + LastRecRow.IdConsOrder + LastRecRow.IdRequest + LastRecRow.DateTimeRec + LastRecRow.DateTimeOpen + LastRecRow.OrderType + LastRecRow.ReRepair + LastRecRow.Reason + LastRecRow.Vin0 + LastRecRow.Vin1 + LastRecRow.Rresponsible + LastRecRow.GNum + LastRecRow.Mileage
+
+	neworderstring := data.DataOrder.ИдЗаказНаряда + data.DataOrder.ИдЗаказНаряда + data.DataOrder.ИдОрганизации + data.DataOrder.ИдПодразделения + data.DataOrder.ИдСводногоЗаказНаряда + data.DataOrder.ИдЗаявки + data.DataOrder.ДатаВремяСоздания + data.DataOrder.ДатаВремяОткрытия + data.DataOrder.ВидОбращения + data.DataOrder.ПовторныйРемонт + data.DataOrder.ПричинаОбращения + data.DataOrder.VINбазовый + data.DataOrder.VINТекущий + data.DataOrder.Ответственный + data.DataOrder.ГосНомерТС + data.DataOrder.ПробегТС
+
+	if lastorederstring == neworderstring {
+		err := errors.New("З-Н повторился")
+
+		//logger.InfoLogger.Println(err)
+
+		return err
+	}
+
+	return nil
+
+}
+
 //cons_orders
 func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 
@@ -320,6 +392,67 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 	err = tx.Commit(ctx)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	return nil
+
+}
+
+func (r *DataRepository) IsConsOrderUnic(data model.ConsOrders) error {
+
+	query := `select * from cons_orders where "Uid_consorder" = $1 order  by id desc limit 1`
+
+	type consorder struct {
+		Id           int
+		IdConsOrder  string
+		IdOrg        string
+		IdDep        string
+		IdRequest    string
+		DateTimeRec  string
+		Rresponsible string
+		DateTimeUp   string
+		UidConsOrder uuid.UUID
+	}
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	var rows pgx.Rows
+
+	var LastRecRow consorder
+
+	rows, err = tx.Query(ctx, query, data.DataConsOrder.Uid_consorder)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+
+		err := rows.Scan(&LastRecRow.Id, &LastRecRow.IdConsOrder, &LastRecRow.IdOrg, &LastRecRow.IdDep, &LastRecRow.IdRequest, &LastRecRow.DateTimeRec, &LastRecRow.Rresponsible, &LastRecRow.DateTimeUp, &LastRecRow.UidConsOrder)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	lastconsorederstring := LastRecRow.IdConsOrder + LastRecRow.IdOrg + LastRecRow.IdDep + LastRecRow.IdRequest + LastRecRow.DateTimeRec + LastRecRow.Rresponsible
+
+	newconsorrderstring := data.DataConsOrder.ИдСводногоЗаказНаряда + data.DataConsOrder.ИдОрганизации + data.DataConsOrder.ИдПодразделения + data.DataConsOrder.ИдЗаявки + data.DataConsOrder.ДатаВремяСоздания + data.DataConsOrder.Ответственный
+
+	if lastconsorederstring == newconsorrderstring {
+		err := errors.New("сводный з-н повторился")
+
+		//logger.InfoLogger.Println(err)
+
 		return err
 	}
 
