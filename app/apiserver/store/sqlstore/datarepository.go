@@ -319,6 +319,7 @@ func (r *DataRepository) IsOrderUnic(data model.Orders) error {
 
 		err := rows.Scan(&LastRecRow.Id, &LastRecRow.IdOrder, &LastRecRow.IdOrg, &LastRecRow.IdDep, &LastRecRow.IdConsOrder, &LastRecRow.IdRequest, &LastRecRow.DateTimeRec, &LastRecRow.DateTimeOpen, &LastRecRow.OrderType, &LastRecRow.ReRepair, &LastRecRow.Reason, &LastRecRow.Vin0, &LastRecRow.Vin1, &LastRecRow.Rresponsible, &LastRecRow.GNum, &LastRecRow.Mileage, &LastRecRow.DateTimeUp, &LastRecRow.UidOrder, &LastRecRow.UidRequest, &LastRecRow.UidConsOrder)
 		if err != nil {
+			logger.InfoLogger.Println(err)
 			return err
 		}
 
@@ -326,7 +327,10 @@ func (r *DataRepository) IsOrderUnic(data model.Orders) error {
 
 	lastorederstring := LastRecRow.IdOrder + LastRecRow.IdOrg + LastRecRow.IdDep + LastRecRow.IdConsOrder + LastRecRow.IdRequest + LastRecRow.DateTimeRec + LastRecRow.DateTimeOpen + LastRecRow.OrderType + LastRecRow.ReRepair + LastRecRow.Reason + LastRecRow.Vin0 + LastRecRow.Vin1 + LastRecRow.Rresponsible + LastRecRow.GNum + LastRecRow.Mileage
 
-	neworderstring := data.DataOrder.ИдЗаказНаряда + data.DataOrder.ИдЗаказНаряда + data.DataOrder.ИдОрганизации + data.DataOrder.ИдПодразделения + data.DataOrder.ИдСводногоЗаказНаряда + data.DataOrder.ИдЗаявки + data.DataOrder.ДатаВремяСоздания + data.DataOrder.ДатаВремяОткрытия + data.DataOrder.ВидОбращения + data.DataOrder.ПовторныйРемонт + data.DataOrder.ПричинаОбращения + data.DataOrder.VINбазовый + data.DataOrder.VINТекущий + data.DataOrder.Ответственный + data.DataOrder.ГосНомерТС + data.DataOrder.ПробегТС
+	neworderstring := data.DataOrder.ИдЗаказНаряда + data.DataOrder.ИдОрганизации + data.DataOrder.ИдПодразделения + data.DataOrder.ИдСводногоЗаказНаряда + data.DataOrder.ИдЗаявки + data.DataOrder.ДатаВремяСоздания + data.DataOrder.ДатаВремяОткрытия + data.DataOrder.ВидОбращения + data.DataOrder.ПовторныйРемонт + data.DataOrder.ПричинаОбращения + data.DataOrder.VINбазовый + data.DataOrder.VINТекущий + data.DataOrder.Ответственный + data.DataOrder.ГосНомерТС + data.DataOrder.ПробегТС
+
+	logger.InfoLogger.Println(lastorederstring)
+	logger.InfoLogger.Println(neworderstring)
 
 	if lastorederstring == neworderstring {
 		err := errors.New("З-Н повторился")

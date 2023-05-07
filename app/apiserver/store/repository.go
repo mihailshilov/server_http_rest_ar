@@ -18,6 +18,7 @@ type UserRepository interface {
 	ExtractTokenMetadata(*http.Request, *model.Service) (*model.AccessDetails, error)
 	VerifyToken(*http.Request, *model.Service) (*jwt.Token, error)
 	ExtractToken(*http.Request) string
+	GetUserRights(uint64) ([]model.UserRightsArr, error)
 }
 
 //data repository

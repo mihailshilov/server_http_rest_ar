@@ -1,12 +1,14 @@
 package apiserver
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,6 +25,10 @@ import (
 	stats_api "github.com/fukata/golang-stats-api-handler"
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
+
+type ctxKey string
+
+const keyUserRights ctxKey = "user_rights"
 
 // @title API для сервисных станций СТТ
 // @version 1.0
@@ -97,6 +103,15 @@ func msgForTag(fe validator.FieldError) string {
 		return "Время указано не верно"
 	}
 	return fe.Error() // default error
+}
+
+func FindRights(a []model.UserRightsArr, b model.UserRightsArr) bool {
+	for _, n := range a {
+		if b == n {
+			return true
+		}
+	}
+	return false
 }
 
 type ApiError struct {
@@ -239,13 +254,21 @@ func (s *server) middleWare(next http.Handler) http.Handler {
 
 		//add user_id to context
 
+		user_rights, err := s.store.User().GetUserRights(user_id.UserId)
+		if err != nil {
+			logger.ErrorLogger.Println(err)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), keyUserRights, user_rights)
+
 		if err := s.store.User().FindUserid(user_id.UserId); err != nil {
 			s.error(w, r, http.StatusUnauthorized, errFindUser)
 			logger.ErrorLogger.Println(err)
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(ctx))
 
 	})
 
@@ -534,6 +557,37 @@ func (s *server) handleOrders() http.HandlerFunc {
 
 			return
 		}
+
+		//Проверка прав
+
+		userRights, ok := r.Context().Value(keyUserRights).([]model.UserRightsArr)
+		if !ok {
+			logger.ErrorLogger.Println("Ид пользователя не найден")
+			return
+		}
+
+		logger.InfoLogger.Println(userRights)
+
+		org_id, _ := strconv.Atoi(req.DataOrder.ИдОрганизации)
+		dep_id, _ := strconv.Atoi(req.DataOrder.ИдПодразделения)
+
+		reqOrgDep := model.UserRightsArr{IdOrg: org_id, IdDep: dep_id}
+
+		logger.InfoLogger.Println(reqOrgDep)
+
+		haveRights := FindRights(userRights, reqOrgDep)
+
+		if haveRights != true {
+			logger.ErrorLogger.Println("Недостаточно прав для данной организации")
+			s.respond(w, r, http.StatusOK, newResponse("error", "Недостаточно прав для данной организации (некорректные аттрибуты id_org/id_dep)"))
+			return
+		}
+
+		// if err := s.store.Data().RightsСheck(req, userID); err != nil {
+		// 	logger.ErrorLogger.Println("У пользователя № " + strconv.FormatInt(int64(userID), 10) + "Надостаточно прав на Организацию:" + req.DataOrder.ИдОрганизации + " и подразделения№ " + req.DataOrder.ИдПодразделения)
+		// 	s.respond(w, r, http.StatusOK, newResponse("error", "Недостаточно прав"))
+		// 	return
+		// }
 
 		//проверка на дубли
 

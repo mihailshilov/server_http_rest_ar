@@ -38,3 +38,12 @@ type ResponseBooking struct {
 	StatusGazCrm   string `json:"status_gcrm"`
 	ResponseGazCrm string `json:"response_gcrm"`
 }
+
+// type UserRights struct {
+// 	UserRightsArr UserRightsArr
+// }
+
+type UserRightsArr struct {
+	IdOrg int
+	IdDep int
+}

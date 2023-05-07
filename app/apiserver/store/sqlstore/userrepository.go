@@ -138,3 +138,42 @@ func (r *UserRepository) ExtractTokenMetadata(req *http.Request, config *model.S
 	logger.ErrorLogger.Println(err)
 	return nil, err
 }
+
+func (r *UserRepository) GetUserRights(userid uint64) ([]model.UserRightsArr, error) {
+
+	Rights := model.UserRightsArr{}
+
+	rows, err := r.store.dbPostgres.Query(context.Background(),
+		"select org_id, dep_id  from stations where userid = $1",
+		userid)
+
+	if err != nil {
+
+		//.Scan(&u.UserID); err != nil {
+
+		if err == sql.ErrNoRows {
+			logger.ErrorLogger.Println(err)
+			return nil, store.ErrRecordNotFound
+		}
+		logger.ErrorLogger.Println(err)
+
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	rights := []model.UserRightsArr{}
+
+	for rows.Next() {
+		//var rights model.UserRights = model.UserRights{}
+
+		err := rows.Scan(&Rights.IdOrg, &Rights.IdDep)
+		if err != nil {
+			logger.ErrorLogger.Println(err)
+			return nil, err
+		}
+		rights = append(rights, Rights)
+	}
+
+	return rights, nil
+}
