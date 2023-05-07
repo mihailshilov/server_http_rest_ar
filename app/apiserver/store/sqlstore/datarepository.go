@@ -417,6 +417,7 @@ func (r *DataRepository) IsConsOrderUnic(data model.ConsOrders) error {
 		Rresponsible string
 		DateTimeUp   string
 		UidConsOrder uuid.UUID
+		UidRequest   uuid.UUID
 	}
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
@@ -441,8 +442,9 @@ func (r *DataRepository) IsConsOrderUnic(data model.ConsOrders) error {
 
 	for rows.Next() {
 
-		err := rows.Scan(&LastRecRow.Id, &LastRecRow.IdConsOrder, &LastRecRow.IdOrg, &LastRecRow.IdDep, &LastRecRow.IdRequest, &LastRecRow.DateTimeRec, &LastRecRow.Rresponsible, &LastRecRow.DateTimeUp, &LastRecRow.UidConsOrder)
+		err := rows.Scan(&LastRecRow.Id, &LastRecRow.IdConsOrder, &LastRecRow.IdOrg, &LastRecRow.IdDep, &LastRecRow.IdRequest, &LastRecRow.DateTimeRec, &LastRecRow.Rresponsible, &LastRecRow.DateTimeUp, &LastRecRow.UidConsOrder, &LastRecRow.UidRequest)
 		if err != nil {
+			logger.InfoLogger.Println(err)
 			return err
 		}
 
