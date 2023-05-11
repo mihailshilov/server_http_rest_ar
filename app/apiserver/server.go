@@ -170,9 +170,14 @@ func (s *server) configureRouter() {
 	s.router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
 		httpSwagger.URL("doc.json"), //The url pointing to API definition
 		httpSwagger.DeepLinking(true),
-		httpSwagger.DocExpansion("none"),
+		//httpSwagger.DocExpansion("none"),
 		httpSwagger.DomID("swagger-ui"),
 		//httpSwagger.Plugins([]string),
+		httpSwagger.UIConfig(map[string]string{
+			"showExtensions":        "true",
+			"onComplete":            `() => { window.ui.setBasePath('v3'); }`,
+			"defaultModelRendering": `"model"`,
+		}),
 	)).Methods(http.MethodGet)
 
 	s.router.HandleFunc("/authentication", s.handleAuth()).Methods("POST")

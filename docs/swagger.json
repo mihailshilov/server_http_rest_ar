@@ -9,7 +9,7 @@
         },
         "version": "1.0"
     },
-    "host": "https://carsrv-test.st.tech",
+    "host": "https://carsrv.st.tech",
     "basePath": "/",
     "paths": {
         "/auth/carsforsite/": {

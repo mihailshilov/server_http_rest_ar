@@ -301,7 +301,7 @@ definitions:
       secret:
         type: string
     type: object
-host: https://carsrv-test.st.tech
+host: https://carsrv.st.tech
 info:
   contact:
     email: shilovmo@st.tech
