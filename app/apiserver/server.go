@@ -34,11 +34,8 @@ const keyUserRights ctxKey = "user_rights"
 // @version 1.0
 // @oas 3
 // @description API-сервер для сбора данных о работе сервисных станций стт
-// @termsOfService http://swagger.io/terms/
 // @contact.name API Support
-// @contact.email soberkoder@swagger.io
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @contact.email shilovmo@st.tech
 // @host https://carsrv.st.tech
 // @BasePath /
 // @query.collection.format multi
@@ -832,15 +829,15 @@ func (s *server) handleWorks() http.HandlerFunc {
 }
 
 // handleCarsForSite godoc
-// @Summary Добавить статус
+// @Summary Данные по проданным автомобилям
 // @Tags Отправка данных
 // @Description Добавить статус заказ-наряда
-// @ID create-status
+// @ID create-carsforsite
 // @Accept  json
 // @Produce  json
-// @Param input body model.DataStatus true "status info"
+// @Param input body model.CarsForSite true "cars for site info"
 // @Success 200 {object} model.Response "OK"
-// @Router /auth/statuses/ [post]
+// @Router /auth/carsforsite/ [post]
 // @Security ApiKeyAuth
 func (s *server) handleCarsForSite() http.HandlerFunc {
 
@@ -948,17 +945,6 @@ func (s *server) handleCarsForSite() http.HandlerFunc {
 
 }
 
-// handleCarsForSite godoc
-// @Summary Добавить статус
-// @Tags Отправка данных
-// @Description Добавить статус заказ-наряда
-// @ID create-status
-// @Accept  json
-// @Produce  json
-// @Param input body model.DataStatus true "status info"
-// @Success 200 {object} model.Response "OK"
-// @Router /auth/statuses/ [post]
-// @Security ApiKeyAuth
 func (s *server) handleLogistic() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -968,26 +954,3 @@ func (s *server) handleLogistic() http.HandlerFunc {
 	}
 
 }
-
-/*
-// handleCarsForSite godoc
-// @Summary Добавить статус
-// @Tags Отправка данных
-// @Description Добавить статус заказ-наряда
-// @ID create-status
-// @Accept  json
-// @Produce  json
-// @Param input body model.DataStatus true "status info"
-// @Success 200 {object} model.Response "OK"
-// @Router /auth/statuses/ [post]
-// @Security ApiKeyAuth
-func (s *server) handleLogistic() http.HandlerFunc {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		logger.InfoLogger.Println("good request )")
-		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
-	}
-
-}
-*/

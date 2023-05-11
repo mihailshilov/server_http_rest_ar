@@ -1,5 +1,39 @@
 basePath: /
 definitions:
+  model.CarsForSite:
+    properties:
+      cars_for_site:
+        $ref: '#/definitions/model.DataCarForSite'
+    type: object
+  model.DataCarForSite:
+    properties:
+      cars:
+        items:
+          properties:
+            flag:
+              enum:
+              - "0"
+              - "1"
+              type: string
+            id_isk:
+              type: string
+            vin:
+              type: string
+            vin_current:
+              type: string
+          required:
+          - flag
+          - id_isk
+          - vin
+          type: object
+        minItems: 1
+        type: array
+      id_org:
+        type: string
+    required:
+    - cars
+    - id_org
+    type: object
   model.DataConsOrder:
     properties:
       date_time_create:
@@ -13,6 +47,10 @@ definitions:
       id_request:
         type: string
       responsible:
+        type: string
+      uid_cons_order:
+        type: string
+      uid_request:
         type: string
     required:
     - date_time_create
@@ -34,8 +72,14 @@ definitions:
       id_org:
         type: string
       type_doc:
+        enum:
+        - Заявка
+        - Заказ-наряд
+        type: string
+      uid_doc:
         type: string
     required:
+    - date_time_create
     - id_dep
     - id_doc
     - id_org
@@ -44,8 +88,6 @@ definitions:
   model.DataOrder:
     properties:
       date_time_create:
-        type: string
-      date_time_form:
         type: string
       date_time_open:
         type: string
@@ -66,11 +108,20 @@ definitions:
       order_type:
         type: string
       re_repair:
+        enum:
+        - Да
+        - Нет
         type: string
       reason:
         description: reason
         type: string
       responsible:
+        type: string
+      uid_cons_order:
+        type: string
+      uid_order:
+        type: string
+      uid_request:
         type: string
       vin0:
         type: string
@@ -84,18 +135,24 @@ definitions:
     - id_org
     - order_type
     - re_repair
-    - reason
     - responsible
-    - vin0
     type: object
   model.DataPart:
     properties:
-      OrderParts:
+      id_dep:
+        type: string
+      id_order:
+        type: string
+      id_org:
+        type: string
+      parts:
         items:
           properties:
             code_catalog:
               type: string
             code_drawing:
+              type: string
+            discount:
               type: string
             name:
               type: string
@@ -107,18 +164,28 @@ definitions:
               type: string
             vat:
               type: string
+          required:
+          - code_catalog
+          - code_drawing
+          - name
+          - number
+          - price
+          - units
+          - vat
           type: object
+        minItems: 1
         type: array
-      id_dep:
+      uid_order:
         type: string
-      id_order:
-        type: string
-      id_org:
-        type: string
+    required:
+    - id_dep
+    - id_order
+    - id_org
+    - parts
     type: object
   model.DataRequest:
     properties:
-      date_time_inf:
+      date_time_rec:
         type: string
       date_time_req:
         type: string
@@ -130,6 +197,8 @@ definitions:
         type: string
       responsible:
         type: string
+      uid_request:
+        type: string
     required:
     - date_time_req
     - id_dep
@@ -139,43 +208,75 @@ definitions:
     type: object
   model.DataStatus:
     properties:
-      OrderStatuses:
+      id_dep:
+        type: string
+      id_order:
+        type: string
+      id_org:
+        type: string
+      statuses:
         items:
           properties:
             date_time_status:
               type: string
             status:
               type: string
+          required:
+          - date_time_status
+          - status
           type: object
+        minItems: 1
         type: array
+      uid_order:
+        type: string
+    required:
+    - id_dep
+    - id_order
+    - id_org
+    - statuses
+    type: object
+  model.DataWork:
+    properties:
       id_dep:
         type: string
       id_order:
         type: string
       id_org:
         type: string
-    type: object
-  model.DataWork:
-    properties:
-      OrderWorks:
+      uid_order:
+        type: string
+      works:
         items:
           properties:
             code:
               type: string
             complexity:
               type: string
+            discount:
+              type: string
             name:
+              type: string
+            number:
               type: string
             price_hour:
               type: string
+            units:
+              type: string
+            vat:
+              type: string
+          required:
+          - complexity
+          - name
+          - number
+          - price_hour
           type: object
+        minItems: 1
         type: array
-      id_dep:
-        type: string
-      id_order:
-        type: string
-      id_org:
-        type: string
+    required:
+    - id_dep
+    - id_order
+    - id_org
+    - works
     type: object
   model.Response:
     properties:
@@ -200,19 +301,40 @@ definitions:
       secret:
         type: string
     type: object
-host: https://carsrv.st.tech
+host: https://carsrv-test.st.tech
 info:
   contact:
-    email: soberkoder@swagger.io
+    email: shilovmo@st.tech
     name: API Support
   description: API-сервер для сбора данных о работе сервисных станций стт
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
   title: API для сервисных станций СТТ
   version: "1.0"
 paths:
+  /auth/carsforsite/:
+    post:
+      consumes:
+      - application/json
+      description: Добавить статус заказ-наряда
+      operationId: create-carsforsite
+      parameters:
+      - description: cars for site info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.CarsForSite'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Данные по проданным автомобилям
+      tags:
+      - Отправка данных
   /auth/consorders/:
     post:
       consumes:
