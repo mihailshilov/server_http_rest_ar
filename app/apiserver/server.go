@@ -335,13 +335,14 @@ func (s *server) handleRequests() http.HandlerFunc {
 			s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 			return
 		}
+		logger.InfoLogger.Println("Проверка заявки на уникальность выполнена")
 
 		if err := s.store.Data().QueryInsertRequests(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
-		logger.InfoLogger.Println("good request )")
+		logger.InfoLogger.Println("good request - Заявка передана")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -457,8 +458,6 @@ func (s *server) handleConsOrders() http.HandlerFunc {
 			return
 		}
 
-		logger.InfoLogger.Println("good request )")
-
 		//Валидация
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
 
@@ -501,6 +500,7 @@ func (s *server) handleConsOrders() http.HandlerFunc {
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
+		logger.InfoLogger.Println("good request - Сводный заказ-наряд добавлен")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -678,7 +678,7 @@ func (s *server) handleStatuses() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-		logger.InfoLogger.Println("good request )")
+		logger.InfoLogger.Println("good request - статусы добавлены")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -752,7 +752,7 @@ func (s *server) handleParts() http.HandlerFunc {
 			return
 		}
 
-		logger.InfoLogger.Println("good request )")
+		logger.InfoLogger.Println("good request - запчасти добавлены")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -943,7 +943,7 @@ func (s *server) handleCarsForSite() http.HandlerFunc {
 		// 	s.respond(w, r, http.StatusOK, newResponse("Ok", resAzgaz.Visible))
 		// }
 
-		logger.InfoLogger.Println("good request )")
+		logger.InfoLogger.Println("good request - автомобили обновлены")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}

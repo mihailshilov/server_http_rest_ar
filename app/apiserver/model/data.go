@@ -47,7 +47,7 @@ type DataOrder struct {
 	ВидОбращения          string `json:"order_type" validate:"required"`
 	ПовторныйРемонт       string `json:"re_repair" validate:"required,oneof=Да Нет"`
 	ПричинаОбращения      string `json:"reason"` //reason
-	VINбазовый            string `json:"vin0"`
+	VINбазовый            string `json:"vin0" validate:"required"`
 	VINТекущий            string `json:"vin1"`
 	Ответственный         string `json:"responsible" validate:"required"`
 	ИдОрганизации         string `json:"id_org" validate:"required,number"`
