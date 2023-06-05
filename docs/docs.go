@@ -508,7 +508,8 @@ const docTemplate = `{
                 "id_org",
                 "order_type",
                 "re_repair",
-                "responsible"
+                "responsible",
+                "vin0"
             ],
             "properties": {
                 "date_time_create": {

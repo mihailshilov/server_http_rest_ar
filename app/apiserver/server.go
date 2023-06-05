@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
+	_ "net/http/pprof"
 	"reflect"
 	"regexp"
-	"strconv"
+	_ "strconv"
 	"strings"
 	"time"
 
@@ -22,7 +24,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
-	stats_api "github.com/fukata/golang-stats-api-handler"
 	logger "github.com/mihailshilov/server_http_rest_ar/app/apiserver/logger"
 )
 
@@ -176,11 +177,23 @@ func (s *server) configureRouter() {
 		httpSwagger.UIConfig(map[string]string{
 			"showExtensions":        "true",
 			"onComplete":            `() => { window.ui.setBasePath('v3'); }`,
-			"defaultModelRendering": `"model"`,
+			"defaultModelRendering": `"example"`,
 		}),
 	)).Methods(http.MethodGet)
 
 	s.router.HandleFunc("/authentication", s.handleAuth()).Methods("POST")
+
+	// Регистрация pprof-обработчиков
+	s.router.HandleFunc("/debug/pprof/", pprof.Index)
+	s.router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	s.router.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	s.router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	s.router.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	s.router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	s.router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	s.router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	s.router.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	s.router.Handle("/debug/pprof/block", pprof.Handler("block"))
 
 	//private
 	auth := s.router.PathPrefix("/auth").Subrouter()
@@ -194,7 +207,6 @@ func (s *server) configureRouter() {
 	auth.HandleFunc("/serviceworks", s.handleWorks()).Methods("POST")
 	auth.HandleFunc("/serviceinform", s.handleInforms()).Methods("POST")
 	auth.HandleFunc("/carsforsite", s.handleCarsForSite()).Methods("POST")
-	auth.HandleFunc("/stats", stats_api.Handler).Methods("GET")
 
 }
 
@@ -213,6 +225,9 @@ func (s *server) handleAuth() http.HandlerFunc {
 	var req model.User
 
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		w.Header().Add("Content-Type", "application/json")
+
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			s.error(w, r, http.StatusBadRequest, errReg)
 			logger.ErrorLogger.Println(err)
@@ -330,19 +345,20 @@ func (s *server) handleRequests() http.HandlerFunc {
 
 		//проверка на дубли
 
-		if err := s.store.Data().IsRequestUnic(req); err != nil {
-			logger.ErrorLogger.Println("Заявка " + req.DataRequest.ИдЗаявки + " дублируется. Запись не внесена в БД, гуид: " + req.DataRequest.Uid_request)
-			s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
-			return
-		}
-		logger.InfoLogger.Println("Проверка заявки на уникальность выполнена")
+		// if err := s.store.Data().IsRequestUnic(req); err != nil {
+		// 	logger.ErrorLogger.Println("Заявка " + req.DataRequest.ИдЗаявки + " дублируется. Запись не внесена в БД, гуид: " + req.DataRequest.Uid_request)
+		// 	s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+		// 	return
+		// }
+		// logger.InfoLogger.Println("Проверка заявки на уникальность выполнена")
 
 		if err := s.store.Data().QueryInsertRequests(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
-		logger.InfoLogger.Println("good request - Заявка передана")
+
+		logger.InfoLogger.Println("id_org: " + req.DataRequest.ИдОрганизации + " - Заявка передана")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -371,8 +387,6 @@ func (s *server) handleInforms() http.HandlerFunc {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-
-		logger.InfoLogger.Println("good request )")
 
 		//Валидация
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
@@ -429,6 +443,7 @@ func (s *server) handleInforms() http.HandlerFunc {
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
+		logger.InfoLogger.Println("id_org: " + req.DataInform.ИдОрганизации + " - Информирование переданo")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -488,19 +503,20 @@ func (s *server) handleConsOrders() http.HandlerFunc {
 		}
 
 		//проверка на дубли
-
-		if err := s.store.Data().IsConsOrderUnic(req); err != nil {
-			logger.ErrorLogger.Println("Сводный З-Н " + req.DataConsOrder.ИдСводногоЗаказНаряда + " дублируется. Запись не внесена в БД, гуид: " + req.DataConsOrder.Uid_consorder)
-			s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
-			return
-		}
-
+		/*
+			if err := s.store.Data().IsConsOrderUnic(req); err != nil {
+				logger.ErrorLogger.Println("Сводный З-Н " + req.DataConsOrder.ИдСводногоЗаказНаряда + " дублируется. Запись не внесена в БД, гуид: " + req.DataConsOrder.Uid_consorder)
+				s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+				return
+			}
+		*/
 		if err := s.store.Data().QueryInsertConsOrders(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
 			return
 		}
-		logger.InfoLogger.Println("good request - Сводный заказ-наряд добавлен")
+
+		logger.InfoLogger.Println("id_org: " + req.DataConsOrder.ИдОрганизации + " - Сводный заказ-наряд добавлен")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -561,29 +577,32 @@ func (s *server) handleOrders() http.HandlerFunc {
 		}
 
 		//Проверка прав
+		// 29-05 убрана проверка прав (модуль рабочий)
 
-		userRights, ok := r.Context().Value(keyUserRights).([]model.UserRightsArr)
-		if !ok {
-			logger.ErrorLogger.Println("Ид пользователя не найден")
-			return
-		}
+		// userRights, ok := r.Context().Value(keyUserRights).([]model.UserRightsArr)
+		// if !ok {
+		// 	logger.ErrorLogger.Println("Ид пользователя не найден")
+		// 	return
+		// }
 
-		logger.InfoLogger.Println(userRights)
+		// logger.InfoLogger.Println(userRights)
 
-		org_id, _ := strconv.Atoi(req.DataOrder.ИдОрганизации)
-		dep_id, _ := strconv.Atoi(req.DataOrder.ИдПодразделения)
+		// org_id, _ := strconv.Atoi(req.DataOrder.ИдОрганизации)
+		// dep_id, _ := strconv.Atoi(req.DataOrder.ИдПодразделения)
 
-		reqOrgDep := model.UserRightsArr{IdOrg: org_id, IdDep: dep_id}
+		// reqOrgDep := model.UserRightsArr{IdOrg: org_id, IdDep: dep_id}
 
-		logger.InfoLogger.Println(reqOrgDep)
+		// logger.InfoLogger.Println(reqOrgDep)
 
-		haveRights := FindRights(userRights, reqOrgDep)
+		// haveRights := FindRights(userRights, reqOrgDep)
 
-		if haveRights != true {
-			logger.ErrorLogger.Println("Недостаточно прав для данной организации")
-			s.respond(w, r, http.StatusOK, newResponse("error", "Недостаточно прав для данной организации (некорректные аттрибуты id_org/id_dep)"))
-			return
-		}
+		// if haveRights != true {
+		// 	logger.ErrorLogger.Println("Недостаточно прав для данной организации")
+		// 	s.respond(w, r, http.StatusOK, newResponse("error", "Недостаточно прав для данной организации (некорректные аттрибуты id_org/id_dep)"))
+		// 	return
+		// }
+
+		// 29-05 убрана проверка прав
 
 		// if err := s.store.Data().RightsСheck(req, userID); err != nil {
 		// 	logger.ErrorLogger.Println("У пользователя № " + strconv.FormatInt(int64(userID), 10) + "Надостаточно прав на Организацию:" + req.DataOrder.ИдОрганизации + " и подразделения№ " + req.DataOrder.ИдПодразделения)
@@ -592,18 +611,19 @@ func (s *server) handleOrders() http.HandlerFunc {
 		// }
 
 		//проверка на дубли
-
-		if err := s.store.Data().IsOrderUnic(req); err != nil {
-			logger.ErrorLogger.Println("З-Н " + req.DataOrder.ИдЗаказНаряда + " дублируется. Запись не внесена в БД, гуид: " + req.DataOrder.Uid_order)
-			s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
-			return
-		}
-
+		/*
+			if err := s.store.Data().IsOrderUnic(req); err != nil {
+				logger.ErrorLogger.Println("З-Н " + req.DataOrder.ИдЗаказНаряда + " дублируется. Запись не внесена в БД, гуид: " + req.DataOrder.Uid_order)
+				s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+				return
+			}
+		*/
 		if err := s.store.Data().QueryInsertOrders(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-		logger.InfoLogger.Println("good request - Заказ-наряд добавлен")
+
+		logger.InfoLogger.Println("id_org: " + req.DataOrder.ИдОрганизации + " - Заказ-наряд добавлен")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 	}
 
@@ -624,6 +644,13 @@ func (s *server) handleStatuses() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		// for name, values := range r.Header {
+		// 	// Loop over all values for the name.
+		// 	for _, value := range values {
+		// 		logger.InfoLogger.Println(name, value)
+		// 	}
+		// }
+
 		req := model.Statuses{}
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -632,16 +659,6 @@ func (s *server) handleStatuses() http.HandlerFunc {
 			return
 		}
 		fmt.Println(req) //debug
-
-		//Проверка наличия заказ-наряда
-		if err := s.store.Data().IsOrderReal(req.DataStatus.ИдЗаказНаряда); err != nil {
-			logger.ErrorLogger.Println(err)
-			out_order := make([]ApiError, 1)
-			out_order[0] = ApiError{"id_order", "Заказ-наряд не найден"}
-
-			s.respond(w, r, http.StatusBadRequest, out_order)
-			return
-		}
 
 		//Валидация
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
@@ -674,11 +691,24 @@ func (s *server) handleStatuses() http.HandlerFunc {
 			return
 		}
 
+		//Проверка наличия заказ-наряда
+		if err := s.store.Data().IsOrderReal(req.DataStatus.ИдЗаказНаряда); err != nil {
+			logger.ErrorLogger.Println(err)
+			out_order := make([]ApiError, 1)
+			out_order[0] = ApiError{"id_order", "Заказ-наряд не найден"}
+
+			logger.ErrorLogger.Println("З-Н: " + req.DataStatus.ИдЗаказНаряда)
+
+			s.respond(w, r, http.StatusBadRequest, out_order)
+			return
+		}
+
 		if err := s.store.Data().QueryInsertStatuses(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			return
 		}
-		logger.InfoLogger.Println("good request - статусы добавлены")
+
+		logger.InfoLogger.Println("id_org: " + req.DataStatus.ИдОрганизации + " - Статусы добавлены")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -752,7 +782,7 @@ func (s *server) handleParts() http.HandlerFunc {
 			return
 		}
 
-		logger.InfoLogger.Println("good request - запчасти добавлены")
+		logger.InfoLogger.Println("id_org: " + req.DataPart.ИдОрганизации + " - Запчасти добавлены")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -826,7 +856,7 @@ func (s *server) handleWorks() http.HandlerFunc {
 			return
 		}
 
-		logger.InfoLogger.Println("good request - работы переданы")
+		logger.InfoLogger.Println("id_org: " + req.DataWork.ИдОрганизации + " - Работы добавлены")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}
@@ -943,7 +973,7 @@ func (s *server) handleCarsForSite() http.HandlerFunc {
 		// 	s.respond(w, r, http.StatusOK, newResponse("Ok", resAzgaz.Visible))
 		// }
 
-		logger.InfoLogger.Println("good request - автомобили обновлены")
+		logger.InfoLogger.Println("id_org: " + req.DataCarForSite.Id_org + " - Автомобили обновлены")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
 
 	}

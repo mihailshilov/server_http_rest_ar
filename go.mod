@@ -35,7 +35,6 @@ require (
 
 require (
 	github.com/denisenkom/go-mssqldb v0.12.2
-	github.com/fukata/golang-stats-api-handler v1.0.0
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.4.2

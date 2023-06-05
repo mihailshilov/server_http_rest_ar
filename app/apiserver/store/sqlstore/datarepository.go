@@ -358,6 +358,8 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 		return err
 	}
 
+	logger.InfoLogger.Println("Запущен блок транзакций") //поиск бага
+
 	dt := time.Now()
 
 	var uid_req, uid_cons uuid.UUID
@@ -392,6 +394,8 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 		logger.ErrorLogger.Println(err)
 		return err
 	}
+
+	logger.InfoLogger.Println("Запущен Exec") //поиск бага
 
 	err = tx.Commit(ctx)
 	if err != nil {
@@ -429,6 +433,8 @@ func (r *DataRepository) IsConsOrderUnic(data model.ConsOrders) error {
 		return err
 	}
 
+	logger.InfoLogger.Println("Запущен блок транзакций") //поиск бага
+
 	var rows pgx.Rows
 
 	var LastRecRow consorder
@@ -439,6 +445,8 @@ func (r *DataRepository) IsConsOrderUnic(data model.ConsOrders) error {
 		return err
 	}
 	defer rows.Close()
+
+	logger.InfoLogger.Println("tx.Query") //поиск бага
 
 	for rows.Next() {
 
@@ -459,8 +467,12 @@ func (r *DataRepository) IsConsOrderUnic(data model.ConsOrders) error {
 
 		//logger.InfoLogger.Println(err)
 
+		logger.InfoLogger.Println("Дубли найдены") //поиск бага
+
 		return err
 	}
+
+	logger.InfoLogger.Println("Дубли не найдены") //поиск бага
 
 	return nil
 
@@ -623,6 +635,7 @@ func (r *DataRepository) IsOrderReal(idOrder string) error {
 	if rowSlice[0].count == 0 {
 		err := errors.New("нет заказ-наряда")
 		logger.ErrorLogger.Println("нет заказ-наряда")
+		tx.Rollback(ctx)
 		return err
 	}
 
@@ -677,6 +690,7 @@ func (r *DataRepository) IsRequestReal(idRequest string) error {
 	if rowSlice[0].count == 0 {
 		err := errors.New("нет заявки")
 		logger.ErrorLogger.Println("нет заявки")
+		tx.Rollback(ctx)
 		return err
 	}
 

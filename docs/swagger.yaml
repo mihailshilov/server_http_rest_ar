@@ -136,6 +136,7 @@ definitions:
     - order_type
     - re_repair
     - responsible
+    - vin0
     type: object
   model.DataPart:
     properties:
