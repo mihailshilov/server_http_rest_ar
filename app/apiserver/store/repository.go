@@ -40,4 +40,6 @@ type DataRepository interface {
 	IsRequestUnic(model.Requests) error
 	IsOrderUnic(model.Orders) error
 	IsConsOrderUnic(model.ConsOrders) error
+	QueryInsertProductionMonth(model.ProductionMonth) error
+	QueryInsertProductionDay(model.ProductionDay) error
 }

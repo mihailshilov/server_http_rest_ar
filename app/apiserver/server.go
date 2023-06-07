@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/http/pprof"
 	_ "net/http/pprof"
 	"reflect"
 	"regexp"
@@ -184,16 +183,16 @@ func (s *server) configureRouter() {
 	s.router.HandleFunc("/authentication", s.handleAuth()).Methods("POST")
 
 	// Регистрация pprof-обработчиков
-	s.router.HandleFunc("/debug/pprof/", pprof.Index)
-	s.router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	s.router.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	s.router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	s.router.HandleFunc("/debug/pprof/trace", pprof.Trace)
-	s.router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
-	s.router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
-	s.router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
-	s.router.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
-	s.router.Handle("/debug/pprof/block", pprof.Handler("block"))
+	// s.router.HandleFunc("/debug/pprof/", pprof.Index)
+	// s.router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	// s.router.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	// s.router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	// s.router.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	// s.router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	// s.router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	// s.router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	// s.router.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	// s.router.Handle("/debug/pprof/block", pprof.Handler("block"))
 
 	//private
 	auth := s.router.PathPrefix("/auth").Subrouter()
@@ -207,6 +206,7 @@ func (s *server) configureRouter() {
 	auth.HandleFunc("/serviceworks", s.handleWorks()).Methods("POST")
 	auth.HandleFunc("/serviceinform", s.handleInforms()).Methods("POST")
 	auth.HandleFunc("/carsforsite", s.handleCarsForSite()).Methods("POST")
+	auth.HandleFunc("/production_day", s.handleProductionDay()).Methods("POST")
 
 }
 
@@ -986,6 +986,60 @@ func (s *server) handleLogistic() http.HandlerFunc {
 
 		logger.InfoLogger.Println("good request )")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+	}
+
+}
+
+func (s *server) handleProductionDay() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		req := model.ProductionDay{}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			logger.ErrorLogger.Println(err)
+			return
+		}
+
+		//Валидация
+		// _ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
+
+		// s.validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		// 	name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		// 	if name == "-" {
+		// 		return ""
+		// 	}
+		// 	return name
+		// })
+
+		if err := s.validate.Struct(req); err != nil {
+			logger.ErrorLogger.Println(err)
+
+			errs := err.(validator.ValidationErrors)
+
+			out := make([]ApiError, len(errs))
+
+			for i, e := range errs {
+
+				out[i] = ApiError{e.Field(), msgForTag(e)}
+
+			}
+
+			s.respond(w, r, http.StatusBadRequest, out)
+
+			return
+		}
+
+		if err := s.store.Data().QueryInsertProductionDay(req); err != nil {
+			logger.ErrorLogger.Println(err)
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		logger.InfoLogger.Println("id_org: " + req.DataProductionDay.ИдОрганизации + " - Ежедневный отчёт передан")
+		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+
 	}
 
 }

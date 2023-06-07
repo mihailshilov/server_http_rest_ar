@@ -194,3 +194,28 @@ type ISKStatus struct {
 type ResponseAzgaz struct {
 	Visible bool `json:"visible"`
 }
+
+type Dealers struct {
+}
+
+type ProductionMonth struct {
+	DataProductionMonth DataProductionMonth `json:"production_month"`
+}
+
+type DataProductionMonth struct {
+	ИдОрганизации   string `json:"id_org" validate:"required,number"`
+	ИдПодразделения string `json:"id_dep" validate:"required,number"`
+	ОтчетныйМесяц   string `json:"date_month" validate:"required,number"`
+	КоличествоНЧ    string `json:"count" validate:"required,numeric"`
+}
+
+type ProductionDay struct {
+	DataProductionDay DataProductionDay `json:"production_day"`
+}
+
+type DataProductionDay struct {
+	ИдОрганизации   string `json:"id_org" validate:"required,number"`
+	ИдПодразделения string `json:"id_dep" validate:"required,number"`
+	ОтчетныйДень    string `json:"date_day" validate:"required"`
+	КоличествоНЧ    string `json:"count" validate:"required,numeric"`
+}

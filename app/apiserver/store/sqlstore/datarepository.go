@@ -32,6 +32,7 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 	tx, err := r.store.dbPostgres.Begin(context.Background())
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
 		return err
 	}
 
@@ -42,6 +43,7 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 		uid_req, err = uuid.FromString(data.DataRequest.Uid_request)
 		if err != nil {
 			logger.ErrorLogger.Println("Неверный формат Guid req")
+			tx.Rollback(ctx)
 			return err
 		}
 	}
@@ -58,12 +60,14 @@ func (r *DataRepository) QueryInsertRequests(data model.Requests) error {
 	)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
 		return err
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
 		return err
 	}
 
@@ -358,14 +362,13 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 		return err
 	}
 
-	logger.InfoLogger.Println("Запущен блок транзакций") //поиск бага
-
 	dt := time.Now()
 
 	var uid_req, uid_cons uuid.UUID
 	if data.DataConsOrder.Uid_request != "" {
 		uid_req, err = uuid.FromString(data.DataConsOrder.Uid_request)
 		if err != nil {
+			tx.Rollback(ctx)
 			logger.ErrorLogger.Println("Неверный формат Guid req")
 			return err
 		}
@@ -374,6 +377,7 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 	if data.DataConsOrder.Uid_consorder != "" {
 		uid_cons, err = uuid.FromString(data.DataConsOrder.Uid_consorder)
 		if err != nil {
+			tx.Rollback(ctx)
 			logger.ErrorLogger.Println("Неверный формат Guid cons")
 			return err
 		}
@@ -391,11 +395,10 @@ func (r *DataRepository) QueryInsertConsOrders(data model.ConsOrders) error {
 		uid_req,
 	)
 	if err != nil {
+		tx.Rollback(ctx)
 		logger.ErrorLogger.Println(err)
 		return err
 	}
-
-	logger.InfoLogger.Println("Запущен Exec") //поиск бага
 
 	err = tx.Commit(ctx)
 	if err != nil {
@@ -445,8 +448,6 @@ func (r *DataRepository) IsConsOrderUnic(data model.ConsOrders) error {
 		return err
 	}
 	defer rows.Close()
-
-	logger.InfoLogger.Println("tx.Query") //поиск бага
 
 	for rows.Next() {
 
@@ -873,6 +874,82 @@ func (r *DataRepository) QueryInsertWorks(data model.Works) error {
 	err = tx.Commit(ctx)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		return err
+	}
+
+	return nil
+
+}
+
+//ProductionDay
+func (r *DataRepository) QueryInsertProductionDay(data model.ProductionDay) error {
+
+	query := `insert into production_day ("ИдОрганизации", "ИдПодразделения", "ДатаОтчета", "НЧ") values($1, $2, $3, $4)`
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
+		return err
+	}
+
+	_, err = tx.Exec(ctx, query,
+		data.DataProductionDay.ИдОрганизации,
+		data.DataProductionDay.ИдПодразделения,
+		data.DataProductionDay.ОтчетныйДень,
+		data.DataProductionDay.КоличествоНЧ,
+	)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+
+		return err
+	}
+
+	return nil
+
+}
+
+//ProductionMonth
+func (r *DataRepository) QueryInsertProductionMonth(data model.ProductionMonth) error {
+
+	query := `insert into production_month ("ИдОрганизации", "ИдПодразделения", "ОтчетныйMесяц", "НЧ") values($1, $2, $3, $4)`
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancelFunc()
+
+	tx, err := r.store.dbPostgres.Begin(context.Background())
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
+		return err
+	}
+
+	_, err = tx.Exec(ctx, query,
+		data.DataProductionMonth.ИдОрганизации,
+		data.DataProductionMonth.ИдПодразделения,
+		data.DataProductionMonth.ОтчетныйМесяц,
+		data.DataProductionMonth.КоличествоНЧ,
+	)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
 		return err
 	}
 
