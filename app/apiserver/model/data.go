@@ -205,7 +205,7 @@ type ProductionMonth struct {
 type DataProductionMonth struct {
 	ИдОрганизации   string `json:"id_org" validate:"required,number"`
 	ИдПодразделения string `json:"id_dep" validate:"required,number"`
-	ОтчетныйМесяц   string `json:"date_month" validate:"required,number"`
+	ОтчетныйМесяц   string `json:"date_month" validate:"required"`
 	КоличествоНЧ    string `json:"count" validate:"required,numeric"`
 }
 

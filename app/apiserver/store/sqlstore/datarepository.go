@@ -949,7 +949,7 @@ func (r *DataRepository) QueryInsertProductionMonth(data model.ProductionMonth) 
 	err = tx.Commit(ctx)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
-		tx.Rollback(ctx)
+
 		return err
 	}
 
