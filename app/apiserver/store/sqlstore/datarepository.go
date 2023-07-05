@@ -101,6 +101,7 @@ func (r *DataRepository) IsRequestUnic(data model.Requests) error {
 	tx, err := r.store.dbPostgres.Begin(context.Background())
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
 		return err
 	}
 
@@ -111,6 +112,7 @@ func (r *DataRepository) IsRequestUnic(data model.Requests) error {
 	rows, err = tx.Query(ctx, query, data.DataRequest.Uid_request)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
 		return err
 	}
 	defer rows.Close()
@@ -122,6 +124,13 @@ func (r *DataRepository) IsRequestUnic(data model.Requests) error {
 			return err
 		}
 
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
+		return err
 	}
 
 	lastreqstring := LastRecRow.IdRequest + LastRecRow.DateTimeReq + LastRecRow.DateTimeRec + LastRecRow.Rresponsible + LastRecRow.IdOrg + LastRecRow.IdDep
@@ -309,6 +318,7 @@ func (r *DataRepository) IsOrderUnic(data model.Orders) error {
 	tx, err := r.store.dbPostgres.Begin(context.Background())
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
 		return err
 	}
 
@@ -319,6 +329,7 @@ func (r *DataRepository) IsOrderUnic(data model.Orders) error {
 	rows, err = tx.Query(ctx, query, data.DataOrder.Uid_order)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
 		return err
 	}
 	defer rows.Close()
@@ -331,6 +342,13 @@ func (r *DataRepository) IsOrderUnic(data model.Orders) error {
 			return err
 		}
 
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
+		return err
 	}
 
 	lastorederstring := LastRecRow.IdOrder + LastRecRow.IdOrg + LastRecRow.IdDep + LastRecRow.IdConsOrder + LastRecRow.IdRequest + LastRecRow.DateTimeRec + LastRecRow.DateTimeOpen + LastRecRow.OrderType + LastRecRow.ReRepair + LastRecRow.Reason + LastRecRow.Vin0 + LastRecRow.Vin1 + LastRecRow.Rresponsible + LastRecRow.GNum + LastRecRow.Mileage
@@ -437,6 +455,7 @@ func (r *DataRepository) IsConsOrderUnic(data model.ConsOrders) error {
 	tx, err := r.store.dbPostgres.Begin(context.Background())
 	if err != nil {
 		logger.ErrorLogger.Println(err)
+		tx.Rollback(ctx)
 		return err
 	}
 
@@ -448,6 +467,7 @@ func (r *DataRepository) IsConsOrderUnic(data model.ConsOrders) error {
 
 	rows, err = tx.Query(ctx, query, data.DataConsOrder.Uid_consorder)
 	if err != nil {
+		tx.Rollback(ctx)
 		logger.ErrorLogger.Println(err)
 		return err
 	}
@@ -457,10 +477,18 @@ func (r *DataRepository) IsConsOrderUnic(data model.ConsOrders) error {
 
 		err := rows.Scan(&LastRecRow.Id, &LastRecRow.IdConsOrder, &LastRecRow.IdOrg, &LastRecRow.IdDep, &LastRecRow.IdRequest, &LastRecRow.DateTimeRec, &LastRecRow.Rresponsible, &LastRecRow.DateTimeUp, &LastRecRow.UidConsOrder, &LastRecRow.UidRequest)
 		if err != nil {
+			tx.Rollback(ctx)
 			logger.InfoLogger.Println(err)
 			return err
 		}
 
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		tx.Rollback(ctx)
+		logger.ErrorLogger.Println(err)
+		return err
 	}
 
 	lastconsorederstring := LastRecRow.IdConsOrder + LastRecRow.IdOrg + LastRecRow.IdDep + LastRecRow.IdRequest + LastRecRow.DateTimeRec + LastRecRow.Rresponsible
