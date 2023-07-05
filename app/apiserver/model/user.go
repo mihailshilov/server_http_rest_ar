@@ -43,7 +43,11 @@ type ResponseBooking struct {
 // 	UserRightsArr UserRightsArr
 // }
 
+type UserRights struct {
+	URA []UserRightsArr `json:"rights"`
+}
+
 type UserRightsArr struct {
-	IdOrg int
-	IdDep int
+	IdOrg int `json:"id_org"`
+	IdDep int `json:"id_dep"`
 }

@@ -14,8 +14,8 @@ type UserRepository interface {
 	FindUser(string, string) (*model.User, error)
 	FindUserid(uint64) error
 	//jwt methods
-	CreateToken(uint64, *model.Service) (string, time.Time, error)
-	ExtractTokenMetadata(*http.Request, *model.Service) (*model.AccessDetails, error)
+	CreateToken(uint64, []model.UserRightsArr, *model.Service) (string, time.Time, error)
+	ExtractTokenMetadata(*http.Request, *model.Service) (*model.AccessDetails, string, error)
 	VerifyToken(*http.Request, *model.Service) (*jwt.Token, error)
 	ExtractToken(*http.Request) string
 	GetUserRights(uint64) ([]model.UserRightsArr, error)
@@ -30,8 +30,7 @@ type DataRepository interface {
 	QueryInsertParts(model.Parts) error
 	QueryInsertWorks(model.Works) error
 	QueryInsertInforms(model.Informs) error
-	QueryInsertCarsForSite(model.CarsForSite) error
-	//QueryUpdateCarsForSite([]model.ISKStatus) error
+	QueryInsertCarsForSite(model.CarsForSite, []model.ISKStatus, []model.SiteStatus) error
 	QueryInsertMssql(model.CarsForSite) ([]model.ISKStatus, error)
 	IsOrderReal(idOrder string) error
 	IsRequestReal(idOrder string) error
@@ -42,4 +41,5 @@ type DataRepository interface {
 	IsConsOrderUnic(model.ConsOrders) error
 	QueryInsertProductionMonth(model.ProductionMonth) error
 	QueryInsertProductionDay(model.ProductionDay) error
+	HideSiteStock([]model.ISKStatus) ([]model.SiteStatus, error)
 }

@@ -9,6 +9,7 @@ import (
 	_ "net/http/pprof"
 	"reflect"
 	"regexp"
+	"strconv"
 	_ "strconv"
 	"strings"
 	"time"
@@ -242,7 +243,14 @@ func (s *server) handleAuth() http.HandlerFunc {
 			return
 		}
 
-		token, datetime_exp, err := s.store.User().CreateToken(uint64(u.ID), s.config)
+		user_rights, err := s.store.User().GetUserRights(uint64(u.ID))
+		if err != nil {
+			s.error(w, r, http.StatusBadRequest, errJwt)
+			logger.ErrorLogger.Println(err)
+			return
+		}
+
+		token, datetime_exp, err := s.store.User().CreateToken(uint64(u.ID), user_rights, s.config)
 		if err != nil {
 			s.error(w, r, http.StatusBadRequest, errJwt)
 			logger.ErrorLogger.Println(err)
@@ -263,7 +271,7 @@ func (s *server) middleWare(next http.Handler) http.Handler {
 		w.Header().Add("Content-Type", "application/json")
 
 		//extract user_id
-		user_id, err := s.store.User().ExtractTokenMetadata(r, s.config)
+		user_id, _, err := s.store.User().ExtractTokenMetadata(r, s.config)
 		if err != nil {
 			s.error(w, r, http.StatusUnauthorized, errJwt)
 			logger.ErrorLogger.Println(err)
@@ -315,6 +323,30 @@ func (s *server) handleRequests() http.HandlerFunc {
 			return
 		}
 
+		//Проверка прав
+		_, string_r, err := s.store.User().ExtractTokenMetadata(r, s.config)
+		if err != nil {
+			logger.ErrorLogger.Println(err)
+		}
+		logger.InfoLogger.Println(string_r)
+
+		user_rights := []model.UserRightsArr{}
+		if err := json.Unmarshal([]byte(string_r), &user_rights); err != nil {
+			logger.ErrorLogger.Println(err)
+		}
+
+		have_rights := false
+		for _, right := range user_rights {
+			if strconv.Itoa(right.IdOrg) == req.DataRequest.ИдОрганизации && strconv.Itoa(right.IdDep) == req.DataRequest.ИдПодразделения {
+				have_rights = true
+			}
+		}
+
+		if have_rights != true {
+			s.respond(w, r, http.StatusOK, newResponse("error", "Недостаточно прав"))
+			return
+		}
+
 		//Валидация
 		_ = s.validate.RegisterValidation("yyyy-mm-ddThh:mm:ss", IsDateCorrect)
 
@@ -346,12 +378,12 @@ func (s *server) handleRequests() http.HandlerFunc {
 
 		//проверка на дубли
 
-		// if err := s.store.Data().IsRequestUnic(req); err != nil {
-		// 	logger.ErrorLogger.Println("Заявка " + req.DataRequest.ИдЗаявки + " дублируется. Запись не внесена в БД, гуид: " + req.DataRequest.Uid_request)
-		// 	s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
-		// 	return
-		// }
-		// logger.InfoLogger.Println("Проверка заявки на уникальность выполнена")
+		if err := s.store.Data().IsRequestUnic(req); err != nil {
+			logger.ErrorLogger.Println("Заявка " + req.DataRequest.ИдЗаявки + " дублируется. Запись не внесена в БД, гуид: " + req.DataRequest.Uid_request)
+			s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+			return
+		}
+		logger.InfoLogger.Println("Проверка заявки на уникальность выполнена")
 
 		if err := s.store.Data().QueryInsertRequests(req); err != nil {
 			logger.ErrorLogger.Println(err)
@@ -504,13 +536,13 @@ func (s *server) handleConsOrders() http.HandlerFunc {
 		}
 
 		//проверка на дубли
-		/*
-			if err := s.store.Data().IsConsOrderUnic(req); err != nil {
-				logger.ErrorLogger.Println("Сводный З-Н " + req.DataConsOrder.ИдСводногоЗаказНаряда + " дублируется. Запись не внесена в БД, гуид: " + req.DataConsOrder.Uid_consorder)
-				s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
-				return
-			}
-		*/
+
+		if err := s.store.Data().IsConsOrderUnic(req); err != nil {
+			logger.ErrorLogger.Println("Сводный З-Н " + req.DataConsOrder.ИдСводногоЗаказНаряда + " дублируется. Запись не внесена в БД, гуид: " + req.DataConsOrder.Uid_consorder)
+			s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+			return
+		}
+
 		if err := s.store.Data().QueryInsertConsOrders(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			s.error(w, r, http.StatusBadRequest, err)
@@ -612,13 +644,13 @@ func (s *server) handleOrders() http.HandlerFunc {
 		// }
 
 		//проверка на дубли
-		/*
-			if err := s.store.Data().IsOrderUnic(req); err != nil {
-				logger.ErrorLogger.Println("З-Н " + req.DataOrder.ИдЗаказНаряда + " дублируется. Запись не внесена в БД, гуид: " + req.DataOrder.Uid_order)
-				s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
-				return
-			}
-		*/
+
+		if err := s.store.Data().IsOrderUnic(req); err != nil {
+			logger.ErrorLogger.Println("З-Н " + req.DataOrder.ИдЗаказНаряда + " дублируется. Запись не внесена в БД, гуид: " + req.DataOrder.Uid_order)
+			s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))
+			return
+		}
+
 		if err := s.store.Data().QueryInsertOrders(req); err != nil {
 			logger.ErrorLogger.Println(err)
 			return
@@ -916,11 +948,6 @@ func (s *server) handleCarsForSite() http.HandlerFunc {
 			return
 		}
 
-		if err := s.store.Data().QueryInsertCarsForSite(req); err != nil {
-			logger.ErrorLogger.Println(err)
-			return
-		}
-
 		// QueryInsertCarsForSiteToIsk (построчно)
 
 		/*
@@ -931,6 +958,7 @@ func (s *server) handleCarsForSite() http.HandlerFunc {
 		*/
 
 		resp_isk, err := s.store.Data().QueryInsertMssql(req)
+
 		if err != nil {
 			s.error(w, r, http.StatusBadRequest, errMssql)
 			logger.ErrorLogger.Println(err)
@@ -941,38 +969,17 @@ func (s *server) handleCarsForSite() http.HandlerFunc {
 		}
 		logger.ErrorLogger.Println(resp_isk)
 
-		// вернуть ответы по каждой строке и
-		// записать ответы в бд (date_rec_isk & status_rec_isk) 6-12
-		////
-		/*
-			if err := s.store.Data().QueryUpdateCarsForSite(resp_isk); err != nil {
-				logger.ErrorLogger.Println(err)
-				return
-			}
-		*/
-		// при успешном ответе по каждой строке дернуть азгаз
-		// записать ответ в бд
+		resp_site, err := s.store.Data().HideSiteStock(resp_isk)
+		if err != nil {
+			logger.ErrorLogger.Println(err)
 
-		//request gazcrm api
+		}
+		logger.ErrorLogger.Println(resp_site)
 
-		//resp_isk //тут будет цикл
-
-		/*
-
-			resAzgaz, err := s.store.Data().RequestAzgaz(resp_isk, s.config)
-			if err != nil {
-				logger.ErrorLogger.Println(err)
-			}
-
-
-		*/
-		// if resAzgaz.Visible {
-		// 	logger.ErrorLogger.Println(resAzgaz)
-		// 	s.respond(w, r, http.StatusBadRequest, newResponse("Error", resAzgaz.Visible))
-		// } else {
-		// 	logger.InfoLogger.Println("gazcrm form data transfer success")
-		// 	s.respond(w, r, http.StatusOK, newResponse("Ok", resAzgaz.Visible))
-		// }
+		if err := s.store.Data().QueryInsertCarsForSite(req, resp_isk, resp_site); err != nil {
+			logger.ErrorLogger.Println(err)
+			return
+		}
 
 		logger.InfoLogger.Println("id_org: " + req.DataCarForSite.Id_org + " - Автомобили обновлены")
 		s.respond(w, r, http.StatusOK, newResponse("ok", "data_received"))

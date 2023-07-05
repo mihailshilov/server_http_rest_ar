@@ -190,8 +190,15 @@ type ISKStatus struct {
 	MsMess string
 }
 
+type SiteStatus struct {
+	Vin    string
+	Id_isk string
+	Flag   string
+	Status string
+}
+
 //resp struct api gaz crm
-type ResponseAzgaz struct {
+type ReqAzgaz struct {
 	Visible bool `json:"visible"`
 }
 

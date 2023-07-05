@@ -40,6 +40,7 @@ type Service struct {
 		} `yaml:"jwt"`
 		Client struct {
 			UrlAzgazTest      string `yaml:"url_azgaz_test"`
+			KeyAzgazTest      string `yaml:"key_azgaz_test"`
 			UrlMailingService string `yaml:"url_mailing_service"`
 		} `yaml:"client"`
 		Queryies struct {

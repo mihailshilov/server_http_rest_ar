@@ -1,11 +1,15 @@
 package sqlstore
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"net/http"
 	"reflect"
 	_ "reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -957,7 +961,7 @@ func (r *DataRepository) QueryInsertProductionMonth(data model.ProductionMonth) 
 
 }
 
-func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
+func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite, resp_isk []model.ISKStatus, resp_site []model.SiteStatus) error {
 
 	var carsforsite [][]interface{}
 
@@ -971,14 +975,47 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 
 		dt := time.Now()
 
+		//status
+		status_isk := false
+		var mess_isk string
+		for _, x := range resp_isk {
+			if (x.Vin == k.Vin) && (x.MsResp == "0" || x.MsResp == "2") {
+				status_isk = true
+				mess_isk = x.MsMess
+			}
+		}
+		status_site := false
+		var mess_site string
+		for _, y := range resp_site {
+			if (y.Vin == k.Vin) && (y.Status == "200 OK" || y.Status == "201 Created") {
+				status_site = true
+			}
+			mess_site = y.Status
+		}
+		//status
+
+		id_org, err := strconv.Atoi(data.DataCarForSite.Id_org)
+		if err != nil {
+			logger.ErrorLogger.Println(err)
+		}
+
+		flag, err := strconv.Atoi(k.Flag)
+		if err != nil {
+			logger.ErrorLogger.Println(err)
+		}
+
 		iter = append(
 			iter,
-			data.DataCarForSite.Id_org,
+			id_org,
 			k.Vin,
 			k.Id_isk,
-			k.Flag,
+			flag,
 			dt.Format("2006-01-02T15:04:05"),
+			status_isk,
+			status_site,
 			k.Vin_current,
+			mess_isk,
+			mess_site,
 		)
 
 		carsforsite = append(carsforsite, iter)
@@ -997,6 +1034,19 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 		return err
 	}
 
+	type cfs_table struct {
+		id_org           int
+		vin              string
+		id_isk           string
+		flag             int
+		date_rec         string
+		status_rec_isk   bool
+		status_rec_azgaz bool
+		vin_current      string
+		mess_rec_isk     string
+		mess_rec_azgaz   string
+	}
+
 	//CarsForSite
 	tableCarsForSite := []string{
 		"id_org",
@@ -1004,7 +1054,11 @@ func (r *DataRepository) QueryInsertCarsForSite(data model.CarsForSite) error {
 		"id_isk",
 		"flag",
 		"date_rec",
+		"status_rec_isk",
+		"status_rec_azgaz",
 		"vin_current",
+		"mess_rec_isk",
+		"mess_rec_azgaz",
 	}
 
 	_, err = tx.CopyFrom(ctx, pgx.Identifier{"carsforsite"}, tableCarsForSite, pgx.CopyFromRows(carsforsite))
@@ -1083,8 +1137,56 @@ func (r *DataRepository) QueryInsertMssql(data model.CarsForSite) ([]model.ISKSt
 
 }
 
-func (r *DataRepository) QueryUpdateCarsForSite(data []model.ISKStatus) error {
-	return nil
+func (r *DataRepository) HideSiteStock(data []model.ISKStatus) ([]model.SiteStatus, error) {
+
+	site_responds := []model.SiteStatus{}
+
+	client := &http.Client{}
+
+	Bearer := r.store.config.Spec.Client.KeyAzgazTest
+
+	for _, car := range data {
+
+		iter := &model.SiteStatus{}
+
+		var visible bool
+		if car.Flag == "0" {
+			visible = false
+		}
+
+		dataset := model.ReqAzgaz{
+			Visible: visible,
+		}
+
+		bodyBytesReq, err := json.Marshal(dataset)
+		if err != nil {
+			logger.ErrorLogger.Println(err)
+		}
+
+		ApiUrl := r.store.config.Spec.Client.UrlAzgazTest + car.Vin + "/"
+
+		req, err := http.NewRequest(http.MethodPut, ApiUrl, bytes.NewBuffer(bodyBytesReq)) // URL-encoded payload
+		if err != nil {
+			logger.ErrorLogger.Println(err)
+		}
+
+		req.Header.Add("Authorization", Bearer)
+		req.Header.Add("Content-Type", "application/json")
+
+		response, err := client.Do(req)
+
+		iter = &model.SiteStatus{
+			Vin:    car.Vin,
+			Id_isk: car.Id_isk,
+			Flag:   car.Flag,
+			Status: response.Status,
+		}
+
+		site_responds = append(site_responds, *iter)
+
+	}
+
+	return site_responds, nil
 }
 
 //request Azgaz catalog

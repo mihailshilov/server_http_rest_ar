@@ -3,6 +3,7 @@ package sqlstore
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -63,17 +64,23 @@ func (r *UserRepository) FindUserid(userid uint64) error {
 
 //creating token
 //create token
-func (r *UserRepository) CreateToken(userid uint64, config *model.Service) (string, time.Time, error) {
+func (r *UserRepository) CreateToken(userid uint64, user_rights []model.UserRightsArr, config *model.Service) (string, time.Time, error) {
 	var err error
 
 	datetime_exp_unix := time.Now().Add(time.Hour * 24 * time.Duration(config.Spec.Jwt.LifeTerm)).Unix()
 	datetime_exp := time.Unix(datetime_exp_unix, 0)
 	t := new(time.Time)
 
+	user_rights_json, err := json.Marshal(user_rights)
+	if err != nil {
+		logger.ErrorLogger.Println(err)
+	}
+
 	//os.Setenv("ACCESS_SECRET", "jdnfksdmfksd") //this should be in an env file
 	atClaims := jwt.MapClaims{}
 	atClaims["authorized"] = true
 	atClaims["user_id"] = userid
+	atClaims["user_rights"] = string(user_rights_json)
 	atClaims["exp"] = datetime_exp_unix
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	token, err := at.SignedString([]byte(config.Spec.Jwt.TokenDecode))
@@ -114,29 +121,36 @@ func (r *UserRepository) VerifyToken(req *http.Request, config *model.Service) (
 }
 
 //extract data from token
-func (r *UserRepository) ExtractTokenMetadata(req *http.Request, config *model.Service) (*model.AccessDetails, error) {
+func (r *UserRepository) ExtractTokenMetadata(req *http.Request, config *model.Service) (*model.AccessDetails, string, error) {
 
 	//var accessDetails model.AccessDetails
 
 	token, err := r.VerifyToken(req, config)
 	if err != nil {
 		logger.ErrorLogger.Println(err)
-		return nil, err
+		return nil, "", err
 	}
 
+	var userId uint64
+	var userRights string
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		userId, err := strconv.ParseUint(fmt.Sprintf("%.f", claims["user_id"]), 10, 64)
+		userId, err = strconv.ParseUint(fmt.Sprintf("%.f", claims["user_id"]), 10, 64)
 		if err != nil {
 			logger.ErrorLogger.Println(err)
-			return nil, err
+			return nil, "", err
 		}
-		return &model.AccessDetails{
-			UserId: userId,
-		}, nil
+
 	}
-	logger.ErrorLogger.Println(err)
-	return nil, err
+
+	userRights = fmt.Sprint(claims["user_rights"])
+
+	logger.ErrorLogger.Println(claims["user_rights"])
+	logger.ErrorLogger.Println(userRights)
+
+	return &model.AccessDetails{
+		UserId: userId,
+	}, userRights, nil
 }
 
 func (r *UserRepository) GetUserRights(userid uint64) ([]model.UserRightsArr, error) {
