@@ -332,7 +332,9 @@ func (s *server) handleRequests() http.HandlerFunc {
 
 		user_rights := []model.UserRightsArr{}
 		if err := json.Unmarshal([]byte(string_r), &user_rights); err != nil {
+			s.respond(w, r, http.StatusBadRequest, newResponse("error", "Недостаточно прав"))
 			logger.ErrorLogger.Println(err)
+			return
 		}
 
 		have_rights := false
@@ -343,7 +345,7 @@ func (s *server) handleRequests() http.HandlerFunc {
 		}
 
 		if have_rights != true {
-			s.respond(w, r, http.StatusOK, newResponse("error", "Недостаточно прав"))
+			s.respond(w, r, http.StatusBadRequest, newResponse("error", "Недостаточно прав"))
 			return
 		}
 
